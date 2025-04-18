@@ -1,18 +1,18 @@
 <?php
 
-namespace VendorName\ExamplePackage\Console;
+namespace Imagewize\SageNativeBlockPackage\Console;
 
 use Roots\Acorn\Console\Commands\Command;
-use VendorName\ExamplePackage\Facades\Example;
+use Imagewize\SageNativeBlockPackage\Facades\SageNativeBlock;
 
-class ExampleCommand extends Command
+class SageNativeBlockCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'example';
+    protected $signature = 'sage-native-block';
 
     /**
      * The console command description.
@@ -29,7 +29,7 @@ class ExampleCommand extends Command
     public function handle()
     {
         $this->info(
-            Example::getQuote()
+            SageNativeBlock::getQuote()
         );
     }
 }
