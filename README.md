@@ -1,4 +1,4 @@
-# Acorn SageNativeBlock Package
+# Acorn Sage Native Block Package
 
 This repo can be used to scaffold an Acorn package. See the [Acorn Package Development](https://roots.io/acorn/docs/package-development/) docs for further information.
 
@@ -7,7 +7,7 @@ This repo can be used to scaffold an Acorn package. See the [Acorn Package Devel
 You can install this package with Composer:
 
 ```bash
-composer require vendor-name/sage-native-block-package
+composer require imagewizee/sage-native-block-package
 ```
 
 You can publish the config file with:
