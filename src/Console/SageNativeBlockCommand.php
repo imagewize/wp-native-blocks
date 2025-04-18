@@ -6,6 +6,15 @@ use Illuminate\Filesystem\Filesystem;
 use Roots\Acorn\Console\Commands\Command;
 use Roots\Acorn\Filesystem\Filesystem as RootsFilesystem;
 
+/**
+ * Command to add native block registration code to the Sage theme setup file.
+ *
+ * Run this command from your WordPress site root or theme directory:
+ * $ wp acorn sage-native-block:add-setup
+ *
+ * To skip confirmation prompt:
+ * $ wp acorn sage-native-block:add-setup --force
+ */
 class SageNativeBlockCommand extends Command
 {
     /**
@@ -81,7 +90,7 @@ class SageNativeBlockCommand extends Command
             // Append the code to the file
             if ($this->files->append($setupPath, $codeToAdd)) {
                 $this->info("Successfully added block registration code to {$setupPath}.");
-                $this->comment("Remember to replace 'your-block' with your actual block name.");
+                $this->comment("Remember to replace 'example-block' with your actual block name.");
 
                 return static::SUCCESS;
             }
@@ -114,7 +123,7 @@ class SageNativeBlockCommand extends Command
  * Register block type using block.json metadata.
  */
 add_action('init', function () {
-    $block_json_path = get_template_directory().'/resources/js/blocks/your-block/block.json';
+    $block_json_path = get_template_directory().'/resources/js/blocks/example-block/block.json';
 
     if (file_exists($block_json_path)) {
         register_block_type($block_json_path);
