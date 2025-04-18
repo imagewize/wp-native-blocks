@@ -73,7 +73,7 @@ class SageNativeBlockCommand extends Command
         }
 
         // Confirm action unless forced
-        if (! $this->option('force') && ! $this->confirm("This will modify {$setupPath}. Do you wish to continue?")) {
+        if (! $this->option('force') && ! $this->confirm("This will modify {$setupPath} and copy block templates. Do you wish to continue?")) {
             $this->line('Operation cancelled.');
 
             return static::SUCCESS;
@@ -90,6 +90,12 @@ class SageNativeBlockCommand extends Command
             // Append the code to the file
             if ($this->files->append($setupPath, $codeToAdd)) {
                 $this->info("Successfully added block registration code to {$setupPath}.");
+                
+                // Copy block template files
+                if ($this->copyBlockStubs($rootsFiles)) {
+                    $this->info("Successfully copied block template files to theme resources directory.");
+                }
+                
                 $this->comment("Remember to replace 'example-block' with your actual block name.");
 
                 return static::SUCCESS;
@@ -131,5 +137,55 @@ add_action('init', function () {
 });
 
 PHP;
+    }
+
+    /**
+     * Copy block stub files to the theme's resources directory.
+     */
+    protected function copyBlockStubs(RootsFilesystem $rootsFiles): bool
+    {
+        try {
+            // Source stub directory
+            $stubsDir = dirname(__DIR__, 2) . '/stubs/block';
+            
+            // Target directory in the theme - resolves to theme_directory/resources/js/blocks/example-block
+            $targetDir = $rootsFiles->path('resources/js/blocks/example-block');
+            
+            // Verify the target path is within the theme
+            $this->line("Target directory will be: {$targetDir}");
+            
+            // Create target directory if it doesn't exist
+            if (! $this->files->isDirectory($targetDir)) {
+                $this->files->makeDirectory($targetDir, 0755, true);
+                $this->line("Created directory: {$targetDir}");
+            }
+            
+            // Files to copy
+            $files = [
+                'block.json',
+                'index.js',
+                'editor.css',
+                'style.css',
+                'view.js'
+            ];
+            
+            // Copy each file
+            foreach ($files as $file) {
+                $source = "{$stubsDir}/{$file}";
+                $target = "{$targetDir}/{$file}";
+                
+                if ($this->files->exists($source)) {
+                    $this->files->copy($source, $target);
+                    $this->line("Copied: {$file}");
+                } else {
+                    $this->warn("Source file not found: {$source}");
+                }
+            }
+            
+            return true;
+        } catch (\Exception $e) {
+            $this->error("Failed to copy block stubs: " . $e->getMessage());
+            return false;
+        }
     }
 }
