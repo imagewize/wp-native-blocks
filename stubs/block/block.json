@@ -18,7 +18,7 @@
     "attributes": {
         "className": {
             "type": "string",
-            "default": "wp-block-vendor-exammple-block"
+            "default": "wp-block-vendor-example-block"
         }
     }
 }

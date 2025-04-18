@@ -7,13 +7,21 @@ use Roots\Acorn\Console\Commands\Command;
 use Roots\Acorn\Filesystem\Filesystem as RootsFilesystem;
 
 /**
- * Command to add native block registration code to the Sage theme setup file.
+ * Command to add native block registration code to the Sage theme setup file and create block files.
  *
  * Run this command from your WordPress site root or theme directory:
  * $ wp acorn sage-native-block:add-setup
  *
+ * To create a block with a custom name:
+ * $ wp acorn sage-native-block:add-setup my-cool-block
+ * 
+ * This will create a block in resources/js/blocks/my-cool-block/ and update all references.
+ *
  * To skip confirmation prompt:
  * $ wp acorn sage-native-block:add-setup --force
+ * 
+ * You can combine both parameters:
+ * $ wp acorn sage-native-block:add-setup my-cool-block --force
  */
 class SageNativeBlockCommand extends Command
 {
@@ -23,6 +31,7 @@ class SageNativeBlockCommand extends Command
      * @var string
      */
     protected $signature = 'sage-native-block:add-setup 
+                            {blockName? : The name of the block to create, defaults to example-block if not provided}
                             {--force : Force the operation to run without confirmation}';
 
     /**
@@ -55,6 +64,9 @@ class SageNativeBlockCommand extends Command
      */
     public function handle(RootsFilesystem $rootsFiles): int
     {
+        // Get block name from argument or use default
+        $blockName = $this->argument('blockName') ?: 'example-block';
+        
         $setupPath = $rootsFiles->path('app/setup.php');
 
         if (! $this->files->exists($setupPath)) {
@@ -84,7 +96,7 @@ class SageNativeBlockCommand extends Command
         $this->files->copy($setupPath, $backupPath);
         $this->line("Created backup at {$backupPath}");
 
-        $codeToAdd = $this->getBlockRegistrationCode();
+        $codeToAdd = $this->getBlockRegistrationCode($blockName);
 
         try {
             // Append the code to the file
@@ -92,15 +104,13 @@ class SageNativeBlockCommand extends Command
                 $this->info("Successfully added block registration code to {$setupPath}.");
 
                 // Copy block template files
-                if ($this->copyBlockStubs($rootsFiles)) {
-                    $this->info('Successfully copied block template files to theme resources directory.');
+                if ($this->copyBlockStubs($rootsFiles, $blockName)) {
+                    $this->info("Successfully copied block template files to theme resources directory.");
                 }
                 
                 // Update CSS and JS files to include block assets
                 $this->updateCssFile($rootsFiles);
                 $this->updateJsFile($rootsFiles);
-
-                $this->comment("Remember to replace 'example-block' with your actual block name.");
 
                 return static::SUCCESS;
             }
@@ -125,18 +135,18 @@ class SageNativeBlockCommand extends Command
     /**
      * Get the block registration code to be added.
      */
-    protected function getBlockRegistrationCode(): string
+    protected function getBlockRegistrationCode(string $blockName): string
     {
-        return <<<'PHP'
+        return <<<PHP
 
 /**
  * Register block type using block.json metadata.
  */
 add_action('init', function () {
-    $block_json_path = get_template_directory().'/resources/js/blocks/example-block/block.json';
+    \$block_json_path = get_template_directory().'/resources/js/blocks/{$blockName}/block.json';
 
-    if (file_exists($block_json_path)) {
-        register_block_type($block_json_path);
+    if (file_exists(\$block_json_path)) {
+        register_block_type(\$block_json_path);
     }
 });
 
@@ -146,14 +156,14 @@ PHP;
     /**
      * Copy block stub files to the theme's resources directory.
      */
-    protected function copyBlockStubs(RootsFilesystem $rootsFiles): bool
+    protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $blockName): bool
     {
         try {
             // Source stub directory
             $stubsDir = dirname(__DIR__, 2).'/stubs/block';
 
-            // Target directory in the theme - resolves to theme_directory/resources/js/blocks/example-block
-            $targetDir = $rootsFiles->path('resources/js/blocks/example-block');
+            // Target directory in the theme - resolves to theme_directory/resources/js/blocks/{$blockName}
+            $targetDir = $rootsFiles->path("resources/js/blocks/{$blockName}");
 
             // Verify the target path is within the theme
             $this->line("Target directory will be: {$targetDir}");
@@ -179,8 +189,15 @@ PHP;
                 $target = "{$targetDir}/{$file}";
 
                 if ($this->files->exists($source)) {
-                    $this->files->copy($source, $target);
-                    $this->line("Copied: {$file}");
+                    $content = $this->files->get($source);
+                    
+                    // Replace block name in block.json
+                    if ($file === 'block.json') {
+                        $content = $this->replaceBlockName($content, $blockName);
+                    }
+                    
+                    $this->files->put($target, $content);
+                    $this->line("Copied and processed: {$file}");
                 } else {
                     $this->warn("Source file not found: {$source}");
                 }
@@ -192,6 +209,49 @@ PHP;
 
             return false;
         }
+    }
+    
+    /**
+     * Replace example-block references with the provided block name in block.json.
+     */
+    protected function replaceBlockName(string $content, string $blockName): string
+    {
+        $data = json_decode($content, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->warn('Could not parse block.json, using it as is.');
+            return $content;
+        }
+        
+        // Extract vendor from the name field, default to 'vendor' if not found
+        $vendor = 'vendor';
+        if (isset($data['name'])) {
+            $parts = explode('/', $data['name']);
+            if (count($parts) > 1) {
+                $vendor = $parts[0];
+                // Update the block name while preserving the vendor
+                $data['name'] = "{$vendor}/{$blockName}";
+            }
+        }
+        
+        // Update the title field based on the block name
+        if (isset($data['title'])) {
+            $formattedName = str_replace('-', ' ', $blockName);
+            $formattedName = ucwords($formattedName);
+            $data['title'] = $formattedName;
+        }
+        
+        // Update textdomain to match vendor if it exists
+        if (isset($data['textdomain']) && $data['textdomain'] === 'vendor') {
+            $data['textdomain'] = $vendor;
+        }
+        
+        // Update the className default using the same vendor
+        if (isset($data['attributes']['className']['default'])) {
+            $data['attributes']['className']['default'] = "wp-block-{$vendor}-{$blockName}";
+        }
+        
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
     
     /**
