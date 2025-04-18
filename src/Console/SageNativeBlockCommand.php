@@ -33,7 +33,6 @@ class SageNativeBlockCommand extends Command
     /**
      * Create a new command instance.
      *
-     * @param  \Illuminate\Filesystem\Filesystem  $files
      * @return void
      */
     public function __construct(Filesystem $files)
@@ -51,6 +50,7 @@ class SageNativeBlockCommand extends Command
 
         if (! $this->files->exists($setupPath)) {
             $this->error("Error: Theme setup file not found at {$setupPath}.");
+
             return static::FAILURE;
         }
 
@@ -59,17 +59,19 @@ class SageNativeBlockCommand extends Command
         // Check if the code is already present
         if (str_contains($currentContent, 'register_block_type($block_json_path);')) {
             $this->info("Block registration code already exists in {$setupPath}.");
+
             return static::SUCCESS;
         }
 
         // Confirm action unless forced
-        if (!$this->option('force') && !$this->confirm("This will modify {$setupPath}. Do you wish to continue?")) {
+        if (! $this->option('force') && ! $this->confirm("This will modify {$setupPath}. Do you wish to continue?")) {
             $this->line('Operation cancelled.');
+
             return static::SUCCESS;
         }
 
         // Create a backup of the file
-        $backupPath = $setupPath . '.backup-' . date('Y-m-d-His');
+        $backupPath = $setupPath.'.backup-'.date('Y-m-d-His');
         $this->files->copy($setupPath, $backupPath);
         $this->line("Created backup at {$backupPath}");
 
@@ -80,19 +82,21 @@ class SageNativeBlockCommand extends Command
             if ($this->files->append($setupPath, $codeToAdd)) {
                 $this->info("Successfully added block registration code to {$setupPath}.");
                 $this->comment("Remember to replace 'your-block' with your actual block name.");
+
                 return static::SUCCESS;
             }
 
             $this->error("Failed to write to {$setupPath}. Reverting to backup...");
             $this->files->copy($backupPath, $setupPath);
+
             return static::FAILURE;
         } catch (\Exception $e) {
-            $this->error("An error occurred: " . $e->getMessage());
-            
+            $this->error('An error occurred: '.$e->getMessage());
+
             if ($this->files->exists($backupPath)) {
-                $this->warn("Restoring from backup...");
+                $this->warn('Restoring from backup...');
                 $this->files->copy($backupPath, $setupPath);
-                $this->info("Backup restored.");
+                $this->info('Backup restored.');
             }
 
             return static::FAILURE;
@@ -101,8 +105,6 @@ class SageNativeBlockCommand extends Command
 
     /**
      * Get the block registration code to be added.
-     *
-     * @return string
      */
     protected function getBlockRegistrationCode(): string
     {
