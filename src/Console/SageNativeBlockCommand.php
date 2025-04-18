@@ -95,6 +95,10 @@ class SageNativeBlockCommand extends Command
                 if ($this->copyBlockStubs($rootsFiles)) {
                     $this->info('Successfully copied block template files to theme resources directory.');
                 }
+                
+                // Update CSS and JS files to include block assets
+                $this->updateCssFile($rootsFiles);
+                $this->updateJsFile($rootsFiles);
 
                 $this->comment("Remember to replace 'example-block' with your actual block name.");
 
@@ -187,6 +191,54 @@ PHP;
             $this->error('Failed to copy block stubs: '.$e->getMessage());
 
             return false;
+        }
+    }
+    
+    /**
+     * Update app.css to dynamically include CSS from all blocks.
+     */
+    protected function updateCssFile(RootsFilesystem $rootsFiles): void
+    {
+        $cssPath = $rootsFiles->path('resources/css/app.css');
+        
+        if (! $this->files->exists($cssPath)) {
+            $this->warn("CSS file not found at {$cssPath}. Creating it...");
+            $this->files->put($cssPath, '');
+        }
+        
+        $cssContent = $this->files->get($cssPath);
+        
+        // Check if the CSS source directive is already present
+        if (! str_contains($cssContent, '@source "../js/blocks/**/";')) {
+            $cssToAdd = "\n\n/* Dynamically include CSS for all blocks in the blocks directory */\n@source \"../js/blocks/**/\";\n";
+            $this->files->append($cssPath, $cssToAdd);
+            $this->info("Added block CSS source directive to {$cssPath}");
+        } else {
+            $this->info("Block CSS source directive already exists in {$cssPath}");
+        }
+    }
+    
+    /**
+     * Update app.js to import block index.js files.
+     */
+    protected function updateJsFile(RootsFilesystem $rootsFiles): void
+    {
+        $jsPath = $rootsFiles->path('resources/js/app.js');
+        
+        if (! $this->files->exists($jsPath)) {
+            $this->warn("JS file not found at {$jsPath}. Creating it...");
+            $this->files->put($jsPath, '');
+        }
+        
+        $jsContent = $this->files->get($jsPath);
+        
+        // Check if the import code is already present
+        if (! str_contains($jsContent, 'import.meta.globEager')) {
+            $jsToAdd = "\n\n/**\n * Import all block index.js files\n */\nconst blocks = import.meta.globEager('./blocks/**/index.js');\n";
+            $this->files->append($jsPath, $jsToAdd);
+            $this->info("Added block JS import code to {$jsPath}");
+        } else {
+            $this->info("Block JS import code already exists in {$jsPath}");
         }
     }
 }
