@@ -58,6 +58,46 @@ class SageNativeBlockCommand extends Command
         parent::__construct();
         $this->files = $files;
     }
+    
+    /**
+     * Resolve the theme path using RootsFilesystem or fallback to WordPress methods
+     *
+     * @param RootsFilesystem $rootsFiles
+     * @param string $relativePath
+     * @return string
+     */
+    protected function resolvePath(RootsFilesystem $rootsFiles, string $relativePath = ''): string
+    {
+        // Try Acorn-specific method if available
+        try {
+            if (method_exists($rootsFiles, 'path')) {
+                return $rootsFiles->path($relativePath);
+            }
+        } catch (\Exception $e) {
+            // Fallback to WordPress methods
+        }
+        
+        // First fallback: WordPress functions
+        if (function_exists('get_template_directory')) {
+            $themePath = get_template_directory();
+            
+            if (!empty($relativePath)) {
+                return $themePath . '/' . $relativePath;
+            }
+            
+            return $themePath;
+        }
+        
+        // Last resort: Try to detect the theme path from the command location
+        $commandPath = dirname(__DIR__, 5); // Adjust if needed
+        $this->warn("Using detected theme path: {$commandPath}");
+        
+        if (!empty($relativePath)) {
+            return $commandPath . '/' . $relativePath;
+        }
+        
+        return $commandPath;
+    }
 
     /**
      * Execute the console command.
@@ -67,7 +107,7 @@ class SageNativeBlockCommand extends Command
         // Get block name from argument or use default
         $blockName = $this->argument('blockName') ?: 'example-block';
         
-        $setupPath = $rootsFiles->path('app/setup.php');
+        $setupPath = $this->resolvePath($rootsFiles, 'app/setup.php');
 
         if (! $this->files->exists($setupPath)) {
             $this->error("Error: Theme setup file not found at {$setupPath}.");
@@ -162,8 +202,8 @@ PHP;
             // Source stub directory
             $stubsDir = dirname(__DIR__, 2).'/stubs/block';
 
-            // Target directory in the theme - resolves to theme_directory/resources/js/blocks/{$blockName}
-            $targetDir = $rootsFiles->path("resources/js/blocks/{$blockName}");
+            // Target directory in the theme
+            $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$blockName}");
 
             // Verify the target path is within the theme
             $this->line("Target directory will be: {$targetDir}");
@@ -259,7 +299,7 @@ PHP;
      */
     protected function updateCssFile(RootsFilesystem $rootsFiles): void
     {
-        $cssPath = $rootsFiles->path('resources/css/app.css');
+        $cssPath = $this->resolvePath($rootsFiles, 'resources/css/app.css');
         
         if (! $this->files->exists($cssPath)) {
             $this->warn("CSS file not found at {$cssPath}. Creating it...");
@@ -283,7 +323,7 @@ PHP;
      */
     protected function updateJsFile(RootsFilesystem $rootsFiles): void
     {
-        $jsPath = $rootsFiles->path('resources/js/app.js');
+        $jsPath = $this->resolvePath($rootsFiles, 'resources/js/app.js');
         
         if (! $this->files->exists($jsPath)) {
             $this->warn("JS file not found at {$jsPath}. Creating it...");
