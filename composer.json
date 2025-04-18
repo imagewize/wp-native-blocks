@@ -11,7 +11,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "Imagewize\\SageNativeBlock\\": "src/"
+      "Imagewize\\SageNativeBlockPackage\\": "src/"
     }
   },
   "require": {
@@ -20,10 +20,10 @@
   "extra": {
     "acorn": {
       "providers": [
-        "Imagewize\\SageNativeBlock\\Providers\\SageNativeBlockServiceProvider"
+        "Imagewize\\SageNativeBlockPackage\\Providers\\SageNativeBlockServiceProvider"
       ],
       "aliases": {
-        "SageNativeBlock": "Imagewize\\SageNativeBlock\\Facades\\SageNativeBlock"
+        "SageNativeBlock": "Imagewize\\SageNativeBlockPackage\\Facades\\SageNativeBlock"
       }
     }
   }
