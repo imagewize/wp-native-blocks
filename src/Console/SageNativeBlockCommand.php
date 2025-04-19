@@ -245,10 +245,6 @@ PHP;
                     elseif ($file === 'view.js') {
                         $content = $this->replaceJsBlockName($content, $blockName);
                     }
-                    // Replace textdomain in editor.jsx only (not needed for save.jsx)
-                    elseif ($file === 'editor.jsx') {
-                        $content = $this->replaceJsxBlockName($content, $blockName);
-                    }
                     
                     $this->files->put($target, $content);
                     $this->line("Copied and processed: {$file}");
@@ -323,19 +319,18 @@ PHP;
     protected function replaceJsBlockName(string $content, string $blockName): string
     {
         // Replace .wp-block-vendor-example-block with .wp-block-vendor-{$blockName}
-        return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-vendor-{$blockName}", $content);
-    }
-    
-    /**
-     * Replace textdomain in JSX files to match the vendor name.
-     */
-    protected function replaceJsxBlockName(string $content, string $blockName): string
-    {
         // Extract vendor from the block name if available, otherwise use 'vendor'
         $vendor = 'vendor';
+        $parts = explode('/', $blockName);
+        if (count($parts) > 1) {
+            // Assuming the format might become vendor/block-name later
+             $vendor = $parts[0];
+             $actualBlockName = $parts[1];
+        } else {
+            $actualBlockName = $blockName; // Use the provided name directly if no vendor prefix
+        }
         
-        // Replace 'vendor' textdomain with the extracted vendor
-        return preg_replace('/__\(\'(.*?)\', \'vendor\'\)/', "__('$1', '{$vendor}')", $content);
+        return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-{$vendor}-{$actualBlockName}", $content);
     }
     
     /**
@@ -363,37 +358,44 @@ PHP;
     }
     
     /**
-     * Update app.js to import block index.js files.
+     * Update editor.js to import block index.js files for the editor.
      */
     protected function updateJsFile(RootsFilesystem $rootsFiles): void
     {
-        $jsPath = $this->resolvePath($rootsFiles, 'resources/js/app.js');
+        $jsPath = $this->resolvePath($rootsFiles, 'resources/js/editor.js'); // Target editor.js
         
         if (! $this->files->exists($jsPath)) {
-            $this->warn("JS file not found at {$jsPath}. Creating it...");
-            $this->files->put($jsPath, '');
+            $this->warn("Editor JS file not found at {$jsPath}. Creating it...");
+            // Create a basic editor.js if it doesn't exist
+            $initialContent = <<<'JS'
+import domReady from '@wordpress/dom-ready';
+
+domReady(() => {
+  // Editor-specific JS logic can go here.
+});
+
+JS;
+            $this->files->put($jsPath, $initialContent);
         }
         
         $jsContent = $this->files->get($jsPath);
         
-        // Check if block import code is already present using the new import.meta.glob approach
-        if (! str_contains($jsContent, 'import.meta.glob(\'./blocks/**/index.js\')')) {
+        // Check if block import code is already present using import.meta.glob
+        // Use a path relative to editor.js
+        if (! str_contains($jsContent, 'import.meta.glob(\'./blocks/**/index.js\')')) { 
             $jsToAdd = <<<'JS'
 
 /**
- * Import all block index.js files
+ * Import block index files for editor registration
  */
-const blockModules = import.meta.glob('./blocks/**/index.js');
+const blockModules = import.meta.glob('./blocks/**/index.js', { eager: true });
 
-// Load each block module
-Object.values(blockModules).forEach(module => {
-  module().then(mod => {
-    // Block is now loaded
-    console.log('Block module loaded');
-  });
-});
+// Log loaded modules (optional)
+console.log('Block modules loaded for editor:', blockModules);
+
 JS;
-            $this->files->append($jsPath, $jsToAdd);
+            // Prepend the import to ensure blocks are registered early
+            $this->files->put($jsPath, $jsToAdd . "\n" . $jsContent); 
             $this->info("Added block JS import code to {$jsPath}");
         } else {
             $this->info("Block JS import code already exists in {$jsPath}");
