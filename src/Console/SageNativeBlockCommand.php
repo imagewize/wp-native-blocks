@@ -235,6 +235,10 @@ PHP;
                     if ($file === 'block.json') {
                         $content = $this->replaceBlockName($content, $blockName);
                     }
+                    // Replace CSS class references in CSS files
+                    elseif ($file === 'style.css' || $file === 'editor.css') {
+                        $content = $this->replaceCssBlockName($content, $blockName);
+                    }
                     
                     $this->files->put($target, $content);
                     $this->line("Copied and processed: {$file}");
@@ -292,6 +296,15 @@ PHP;
         }
         
         return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+    
+    /**
+     * Replace example-block references with the provided block name in CSS files.
+     */
+    protected function replaceCssBlockName(string $content, string $blockName): string
+    {
+        // Replace .wp-block-vendor-example-block with .wp-block-vendor-{$blockName}
+        return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-vendor-{$blockName}", $content);
     }
     
     /**
