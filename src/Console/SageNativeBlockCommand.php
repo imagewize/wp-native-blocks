@@ -218,6 +218,8 @@ PHP;
             $files = [
                 'block.json',
                 'index.js',
+                'editor.jsx',
+                'save.jsx',
                 'editor.css',
                 'style.css',
                 'view.js',
@@ -242,6 +244,10 @@ PHP;
                     // Replace CSS class references in view.js
                     elseif ($file === 'view.js') {
                         $content = $this->replaceJsBlockName($content, $blockName);
+                    }
+                    // Replace textdomain in editor.jsx only (not needed for save.jsx)
+                    elseif ($file === 'editor.jsx') {
+                        $content = $this->replaceJsxBlockName($content, $blockName);
                     }
                     
                     $this->files->put($target, $content);
@@ -318,6 +324,18 @@ PHP;
     {
         // Replace .wp-block-vendor-example-block with .wp-block-vendor-{$blockName}
         return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-vendor-{$blockName}", $content);
+    }
+    
+    /**
+     * Replace textdomain in JSX files to match the vendor name.
+     */
+    protected function replaceJsxBlockName(string $content, string $blockName): string
+    {
+        // Extract vendor from the block name if available, otherwise use 'vendor'
+        $vendor = 'vendor';
+        
+        // Replace 'vendor' textdomain with the extracted vendor
+        return preg_replace('/__\(\'(.*?)\', \'vendor\'\)/', "__('$1', '{$vendor}')", $content);
     }
     
     /**
