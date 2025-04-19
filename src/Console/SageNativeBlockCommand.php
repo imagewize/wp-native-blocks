@@ -358,9 +358,23 @@ PHP;
         
         $jsContent = $this->files->get($jsPath);
         
-        // Check if the import code is already present
-        if (! str_contains($jsContent, 'import.meta.globEager')) {
-            $jsToAdd = "\n\n/**\n * Import all block index.js files\n */\nconst blocks = import.meta.globEager('./blocks/**/index.js');\n";
+        // Check if block import code is already present using the new import.meta.glob approach
+        if (! str_contains($jsContent, 'import.meta.glob(\'./blocks/**/index.js\')')) {
+            $jsToAdd = <<<'JS'
+
+/**
+ * Import all block index.js files
+ */
+const blockModules = import.meta.glob('./blocks/**/index.js');
+
+// Load each block module
+Object.values(blockModules).forEach(module => {
+  module().then(mod => {
+    // Block is now loaded
+    console.log('Block module loaded');
+  });
+});
+JS;
             $this->files->append($jsPath, $jsToAdd);
             $this->info("Added block JS import code to {$jsPath}");
         } else {
