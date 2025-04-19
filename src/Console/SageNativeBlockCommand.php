@@ -239,6 +239,10 @@ PHP;
                     elseif ($file === 'style.css' || $file === 'editor.css') {
                         $content = $this->replaceCssBlockName($content, $blockName);
                     }
+                    // Replace CSS class references in view.js
+                    elseif ($file === 'view.js') {
+                        $content = $this->replaceJsBlockName($content, $blockName);
+                    }
                     
                     $this->files->put($target, $content);
                     $this->line("Copied and processed: {$file}");
@@ -302,6 +306,15 @@ PHP;
      * Replace example-block references with the provided block name in CSS files.
      */
     protected function replaceCssBlockName(string $content, string $blockName): string
+    {
+        // Replace .wp-block-vendor-example-block with .wp-block-vendor-{$blockName}
+        return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-vendor-{$blockName}", $content);
+    }
+    
+    /**
+     * Replace example-block references with the provided block name in JS files.
+     */
+    protected function replaceJsBlockName(string $content, string $blockName): string
     {
         // Replace .wp-block-vendor-example-block with .wp-block-vendor-{$blockName}
         return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-vendor-{$blockName}", $content);
