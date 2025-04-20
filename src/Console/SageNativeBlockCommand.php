@@ -12,16 +12,23 @@ use Roots\Acorn\Filesystem\Filesystem as RootsFilesystem;
  * Run this command from your WordPress site root or theme directory:
  * $ wp acorn sage-native-block:add-setup
  *
- * To create a block with a custom name:
- * $ wp acorn sage-native-block:add-setup my-cool-block
- * 
- * This will create a block in resources/js/blocks/my-cool-block/ and update all references.
+ * To create a block with a custom name (e.g., 'cool-block'):
+ * $ wp acorn sage-native-block:add-setup cool-block
+ *   (This will create a block named 'vendor/cool-block')
+ *
+ * To create a block with a specific vendor prefix (e.g., 'imagewize/my-cool-block'):
+ * $ wp acorn sage-native-block:add-setup imagewize/my-cool-block
+ *
+ * This will create block files in resources/js/blocks/<block-name-without-vendor>/
+ * The block.json 'name' will always include a vendor prefix (e.g., 'vendor/cool-block' or 'imagewize/my-cool-block').
+ * The block.json 'textdomain' will be set to the vendor ('vendor' or 'imagewize').
+ * The default CSS class will be 'wp-block-vendor-cool-block' or 'wp-block-imagewize-my-cool-block'.
  *
  * To skip confirmation prompt:
  * $ wp acorn sage-native-block:add-setup --force
- * 
- * You can combine both parameters:
- * $ wp acorn sage-native-block:add-setup my-cool-block --force
+ *
+ * You can combine parameters:
+ * $ wp acorn sage-native-block:add-setup imagewize/my-cool-block --force
  */
 class SageNativeBlockCommand extends Command
 {
@@ -31,7 +38,7 @@ class SageNativeBlockCommand extends Command
      * @var string
      */
     protected $signature = 'sage-native-block:add-setup 
-                            {blockName? : The name of the block to create, defaults to example-block if not provided}
+                            {blockName? : The name of the block (e.g., "my-block" or "vendor/my-block"), defaults to example-block}
                             {--force : Force the operation to run without confirmation}';
 
     /**
@@ -105,8 +112,16 @@ class SageNativeBlockCommand extends Command
     public function handle(RootsFilesystem $rootsFiles): int
     {
         // Get block name from argument or use default
-        $blockName = $this->argument('blockName') ?: 'example-block';
-        
+        $blockNameInput = $this->argument('blockName') ?: 'example-block';
+
+        // Ensure block name always has a vendor prefix
+        if (!str_contains($blockNameInput, '/')) {
+            $fullBlockName = 'vendor/' . $blockNameInput;
+            $this->info("No vendor prefix provided. Using default: '{$fullBlockName}'");
+        } else {
+            $fullBlockName = $blockNameInput;
+        }
+
         $setupPath = $this->resolvePath($rootsFiles, 'app/setup.php');
 
         if (! $this->files->exists($setupPath)) {
@@ -120,50 +135,65 @@ class SageNativeBlockCommand extends Command
         // Check if the code is already present
         if (str_contains($currentContent, 'register_block_type($block_json_path);')) {
             $this->info("Block registration code already exists in {$setupPath}.");
-
-            return static::SUCCESS;
         }
 
         // Confirm action unless forced
-        if (! $this->option('force') && ! $this->confirm("This will modify {$setupPath} and copy block templates. Do you wish to continue?")) {
+        if (! $this->option('force') && ! $this->confirm("This will modify {$setupPath} (if needed) and copy block templates for '{$fullBlockName}'. Do you wish to continue?")) {
             $this->line('Operation cancelled.');
 
             return static::SUCCESS;
         }
 
-        // Create a backup of the file
-        $backupPath = $setupPath.'.backup-'.date('Y-m-d-His');
-        $this->files->copy($setupPath, $backupPath);
-        $this->line("Created backup at {$backupPath}");
+        // Create a backup of the setup file only if we are modifying it
+        $backupPath = null;
+        if (!str_contains($currentContent, 'register_block_type($block_json_path);')) {
+            $backupPath = $setupPath.'.backup-'.date('Y-m-d-His');
+            $this->files->copy($setupPath, $backupPath);
+            $this->line("Created backup at {$backupPath}");
+        }
 
-        $codeToAdd = $this->getBlockRegistrationCode($blockName);
+        // Extract the base name for directory structure
+        $directoryBlockName = $this->getDirectoryBlockName($fullBlockName);
+        $codeToAdd = $this->getBlockRegistrationCode();
 
         try {
-            // Append the code to the file
-            if ($this->files->append($setupPath, $codeToAdd)) {
-                $this->info("Successfully added block registration code to {$setupPath}.");
-
-                // Copy block template files
-                if ($this->copyBlockStubs($rootsFiles, $blockName)) {
-                    $this->info("Successfully copied block template files to theme resources directory.");
+            // Append the code to the file only if it's not already there
+            if (!str_contains($currentContent, 'register_block_type($block_json_path);')) {
+                if ($this->files->append($setupPath, $codeToAdd)) {
+                    $this->info("Successfully added block registration code to {$setupPath}.");
+                } else {
+                    $this->error("Failed to write to {$setupPath}. Reverting to backup...");
+                    if ($backupPath) {
+                        $this->files->copy($backupPath, $setupPath);
+                    }
+                    return static::FAILURE;
                 }
-                
-                // Update CSS and JS files to include block assets
-                $this->updateCssFile($rootsFiles);
-                $this->updateJsFile($rootsFiles);
-
-                return static::SUCCESS;
             }
 
-            $this->error("Failed to write to {$setupPath}. Reverting to backup...");
-            $this->files->copy($backupPath, $setupPath);
+            // Copy block template files using the full name for replacements and directory name for path
+            if ($this->copyBlockStubs($rootsFiles, $fullBlockName, $directoryBlockName)) {
+                $this->info("Successfully copied block template files to theme resources directory.");
+            } else {
+                 // If copying fails, potentially revert setup.php if it was modified in this run
+                 if ($backupPath && $this->files->exists($backupPath)) {
+                    $this->warn('Restoring setup.php from backup due to error during stub copying...');
+                    $this->files->copy($backupPath, $setupPath);
+                    $this->info('Backup restored.');
+                }
+                return static::FAILURE;
+            }
+            
+            // Update CSS and JS files to include block assets
+            $this->updateCssFile($rootsFiles);
+            $this->updateJsFile($rootsFiles);
 
-            return static::FAILURE;
+            return static::SUCCESS;
+
         } catch (\Exception $e) {
             $this->error('An error occurred: '.$e->getMessage());
 
-            if ($this->files->exists($backupPath)) {
-                $this->warn('Restoring from backup...');
+            if ($backupPath && $this->files->exists($backupPath)) {
+                $this->warn('Restoring setup.php from backup...');
                 $this->files->copy($backupPath, $setupPath);
                 $this->info('Backup restored.');
             }
@@ -173,37 +203,65 @@ class SageNativeBlockCommand extends Command
     }
 
     /**
-     * Get the block registration code to be added.
+     * Get the base block name for directory structure.
+     * Example: 'vendor/my-block' -> 'my-block', 'my-block' -> 'my-block'
      */
-    protected function getBlockRegistrationCode(string $blockName): string
+    protected function getDirectoryBlockName(string $fullBlockName): string
+    {
+        if (str_contains($fullBlockName, '/')) {
+            $parts = explode('/', $fullBlockName);
+            return end($parts);
+        }
+        return $fullBlockName;
+    }
+
+    /**
+     * Get the generic block registration code to be added.
+     */
+    protected function getBlockRegistrationCode(): string
     {
         return <<<PHP
 
 /**
- * Register block type using block.json metadata.
+ * Register block types using block.json metadata from the theme's blocks directory.
+ * This function will scan the 'resources/js/blocks' directory for block.json files.
  */
 add_action('init', function () {
-    \$block_json_path = get_template_directory().'/resources/js/blocks/{$blockName}/block.json';
-
-    if (file_exists(\$block_json_path)) {
-        register_block_type(\$block_json_path);
+    \$blocks_dir = get_template_directory() . '/resources/js/blocks';
+    if (!is_dir(\$blocks_dir)) {
+        return;
     }
-});
+
+    \$block_folders = scandir(\$blocks_dir);
+
+    foreach (\$block_folders as \$folder) {
+        if (\$folder === '.' || \$folder === '..') {
+            continue;
+        }
+
+        \$block_json_path = \$blocks_dir . '/' . \$folder . '/block.json';
+
+        if (file_exists(\$block_json_path)) {
+            register_block_type(\$block_json_path);
+        }
+    }
+}, 10);
 
 PHP;
     }
 
     /**
      * Copy block stub files to the theme's resources directory.
+     * Uses directoryBlockName for the target path and fullBlockName for replacements.
      */
-    protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $blockName): bool
+    protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $fullBlockName, string $directoryBlockName): bool
     {
         try {
             // Source stub directory
             $stubsDir = dirname(__DIR__, 2).'/stubs/block';
 
-            // Target directory in the theme
-            $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$blockName}");
+            // Target directory in the theme using the directoryBlockName
+            $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$directoryBlockName}");
 
             // Verify the target path is within the theme
             $this->line("Target directory will be: {$targetDir}");
@@ -212,6 +270,8 @@ PHP;
             if (! $this->files->isDirectory($targetDir)) {
                 $this->files->makeDirectory($targetDir, 0755, true);
                 $this->line("Created directory: {$targetDir}");
+            } else {
+                 $this->warn("Target directory already exists: {$targetDir}. Files will be overwritten.");
             }
 
             // Files to copy
@@ -233,17 +293,17 @@ PHP;
                 if ($this->files->exists($source)) {
                     $content = $this->files->get($source);
                     
-                    // Replace block name in block.json
+                    // Use the full block name for replacements
                     if ($file === 'block.json') {
-                        $content = $this->replaceBlockName($content, $blockName);
+                        $content = $this->replaceBlockName($content, $fullBlockName);
                     }
                     // Replace CSS class references in CSS files
                     elseif ($file === 'style.css' || $file === 'editor.css') {
-                        $content = $this->replaceCssBlockName($content, $blockName);
+                        $content = $this->replaceCssClassName($content, $fullBlockName);
                     }
                     // Replace CSS class references in view.js
                     elseif ($file === 'view.js') {
-                        $content = $this->replaceJsBlockName($content, $blockName);
+                        $content = $this->replaceJsClassName($content, $fullBlockName);
                     }
                     
                     $this->files->put($target, $content);
@@ -262,143 +322,151 @@ PHP;
     }
     
     /**
-     * Replace example-block references with the provided block name in block.json.
+     * Replace placeholders in block.json content with the provided full block name.
      */
-    protected function replaceBlockName(string $content, string $blockName): string
+    protected function replaceBlockName(string $content, string $fullBlockName): string
     {
         $data = json_decode($content, true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->warn('Could not parse block.json, using it as is.');
+            $this->warn('Could not parse block.json stub, using it as is.');
             return $content;
         }
-        
-        // Extract vendor from the name field, default to 'vendor' if not found
-        $vendor = 'vendor';
-        if (isset($data['name'])) {
-            $parts = explode('/', $data['name']);
-            if (count($parts) > 1) {
-                $vendor = $parts[0];
-                // Update the block name while preserving the vendor
-                $data['name'] = "{$vendor}/{$blockName}";
-            }
+
+        // Parse the full block name (guaranteed to have a vendor by handle())
+        $vendor = 'vendor'; // Default if parsing fails unexpectedly
+        $actualBlockName = $fullBlockName;
+        if (str_contains($fullBlockName, '/')) {
+            $parts = explode('/', $fullBlockName, 2);
+            $vendor = $parts[0];
+            $actualBlockName = $parts[1];
+        } else {
+            // This case should ideally not be reached due to logic in handle()
+             $this->warn("Block name '{$fullBlockName}' unexpectedly lacks a vendor prefix during replacement. Defaulting vendor to 'vendor'.");
+             $actualBlockName = $fullBlockName; // Use the full name as the actual name
         }
-        
-        // Update the title field based on the block name
+
+        // Update the name field
+        $data['name'] = $fullBlockName;
+
+        // Update the title field based on the actual block name part
         if (isset($data['title'])) {
-            $formattedName = str_replace('-', ' ', $blockName);
+            $formattedName = str_replace('-', ' ', $actualBlockName);
             $formattedName = ucwords($formattedName);
             $data['title'] = $formattedName;
         }
-        
-        // Update textdomain to match vendor if it exists
-        if (isset($data['textdomain']) && $data['textdomain'] === 'vendor') {
-            $data['textdomain'] = $vendor;
+
+        // Update textdomain to match the determined vendor
+        if (isset($data['textdomain'])) { // Check if textdomain key exists in stub
+             $data['textdomain'] = $vendor;
         }
-        
-        // Update the className default using the same vendor
+
+        // Update the className default
         if (isset($data['attributes']['className']['default'])) {
-            $data['attributes']['className']['default'] = "wp-block-{$vendor}-{$blockName}";
+            $className = 'wp-block-' . str_replace('/', '-', $fullBlockName);
+            $data['attributes']['className']['default'] = $className;
         }
-        
+
         return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
     
     /**
-     * Replace example-block references with the provided block name in CSS files.
+     * Replace example CSS class name with the generated class name based on the full block name.
      */
-    protected function replaceCssBlockName(string $content, string $blockName): string
+    protected function replaceCssClassName(string $content, string $fullBlockName): string
     {
-        // Replace .wp-block-vendor-example-block with .wp-block-vendor-{$blockName}
-        return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-vendor-{$blockName}", $content);
+        // Generate class name like wp-block-vendor-block-name or wp-block-block-name
+        $className = 'wp-block-' . str_replace('/', '-', $fullBlockName);
+        
+        // Replace the placeholder class. No need to escape the replacement string.
+        return preg_replace('/\.wp-block-vendor-example-block/', ".{$className}", $content);
     }
     
     /**
-     * Replace example-block references with the provided block name in JS files.
+     * Replace example CSS class name with the generated class name in JS files.
      */
-    protected function replaceJsBlockName(string $content, string $blockName): string
+    protected function replaceJsClassName(string $content, string $fullBlockName): string
     {
-        // Replace .wp-block-vendor-example-block with .wp-block-vendor-{$blockName}
-        // Extract vendor from the block name if available, otherwise use 'vendor'
-        $vendor = 'vendor';
-        $parts = explode('/', $blockName);
-        if (count($parts) > 1) {
-            // Assuming the format might become vendor/block-name later
-             $vendor = $parts[0];
-             $actualBlockName = $parts[1];
-        } else {
-            $actualBlockName = $blockName; // Use the provided name directly if no vendor prefix
-        }
-        
-        return preg_replace('/\.wp-block-vendor-example-block/', ".wp-block-{$vendor}-{$actualBlockName}", $content);
+        $className = 'wp-block-' . str_replace('/', '-', $fullBlockName);
+        // Replace the placeholder class literal.
+        return str_replace('.wp-block-vendor-example-block', ".{$className}", $content);
     }
-    
+
     /**
      * Update app.css to dynamically include CSS from all blocks.
      */
     protected function updateCssFile(RootsFilesystem $rootsFiles): void
     {
         $cssPath = $this->resolvePath($rootsFiles, 'resources/css/app.css');
-        
+
         if (! $this->files->exists($cssPath)) {
             $this->warn("CSS file not found at {$cssPath}. Creating it...");
-            $this->files->put($cssPath, '');
+            // Use actual newlines for clarity
+            $initialCssContent = "/**" . PHP_EOL . " * App entrypoint" . PHP_EOL . " */" . PHP_EOL;
+            $this->files->put($cssPath, $initialCssContent);
         }
-        
+
+        // Read content after potential creation
         $cssContent = $this->files->get($cssPath);
-        
-        // Check if the CSS source directive is already present
-        if (! str_contains($cssContent, '@source "../js/blocks/**/";')) {
-            $cssToAdd = "\n\n/* Dynamically include CSS for all blocks in the blocks directory */\n@source \"../js/blocks/**/\";\n";
+
+        $directive = '@import "../js/blocks/**/*.css";';
+        $altDirective = '@source "../js/blocks/**/";'; // Handle potential alternative syntax
+
+        if (! str_contains($cssContent, $directive) && ! str_contains($cssContent, $altDirective)) {
+            // Use PHP_EOL for cross-platform compatibility
+            $cssToAdd = PHP_EOL . PHP_EOL . "/**" . PHP_EOL . " * Import block styles" . PHP_EOL . " */" . PHP_EOL . $directive . PHP_EOL;
             $this->files->append($cssPath, $cssToAdd);
-            $this->info("Added block CSS source directive to {$cssPath}");
+            $this->info("Added block CSS import directive to {$cssPath}");
         } else {
-            $this->info("Block CSS source directive already exists in {$cssPath}");
+            $this->info("Block CSS import directive already exists in {$cssPath}");
         }
     }
-    
+
     /**
      * Update editor.js to import block index.js files for the editor.
      */
     protected function updateJsFile(RootsFilesystem $rootsFiles): void
     {
-        $jsPath = $this->resolvePath($rootsFiles, 'resources/js/editor.js'); // Target editor.js
-        
+        $jsPath = $this->resolvePath($rootsFiles, 'resources/js/editor.js');
+
         if (! $this->files->exists($jsPath)) {
             $this->warn("Editor JS file not found at {$jsPath}. Creating it...");
-            // Create a basic editor.js if it doesn't exist
+            // Use NOWDOC for initial content to avoid issues with special characters
             $initialContent = <<<'JS'
 import domReady from '@wordpress/dom-ready';
 
-domReady(() => {
-  // Editor-specific JS logic can go here.
-});
+/**
+ * Import editor blocks
+ */
+import.meta.glob('./blocks/**/index.js', { eager: true });
 
-JS;
+domReady(() => {
+  // Initialize editor scripts here
+});
+JS; // Ensure this is at the start of the line with no preceding whitespace
             $this->files->put($jsPath, $initialContent);
-        }
-        
-        $jsContent = $this->files->get($jsPath);
-        
-        // Check if block import code is already present using import.meta.glob
-        // Use a path relative to editor.js
-        if (! str_contains($jsContent, 'import.meta.glob(\'./blocks/**/index.js\')')) { 
-            $jsToAdd = <<<'JS'
+            $this->info("Created {$jsPath} with block import code.");
+        } else {
+            $jsContent = $this->files->get($jsPath);
+
+            $globPattern = './blocks/**/index.js';
+            // Use regex for a more robust check of the import line existence
+            if (! preg_match('/import\.meta\.glob\(\s*[\'"]' . preg_quote($globPattern, '/') . '[\'"]/', $jsContent)) {
+                // Use NOWDOC for the code to add
+                $jsToAdd = <<<'JS'
 
 /**
- * Import block index files for editor registration
+ * Import editor blocks
  */
-const blockModules = import.meta.glob('./blocks/**/index.js', { eager: true });
+import.meta.glob('./blocks/**/index.js', { eager: true });
 
-// Log loaded modules (optional)
-console.log('Block modules loaded for editor:', blockModules);
-
-JS;
-            // Prepend the import to ensure blocks are registered early
-            $this->files->put($jsPath, $jsToAdd . "\n" . $jsContent); 
-            $this->info("Added block JS import code to {$jsPath}");
-        } else {
-            $this->info("Block JS import code already exists in {$jsPath}");
+JS; // Ensure this is at the start of the line with no preceding whitespace
+                // Prepend the import code to the existing content
+                $this->files->put($jsPath, $jsToAdd . $jsContent);
+                $this->info("Added block JS import code to {$jsPath}");
+            } else {
+                $this->info("Block JS import code already exists in {$jsPath}");
+            }
         }
     }
 }
