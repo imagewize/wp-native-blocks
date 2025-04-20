@@ -4,20 +4,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Example Package
+    | Sage Native Block Package Configuration
     |--------------------------------------------------------------------------
     |
-    | Configuration files provide a great way to customize your package.
-    |
-    | In most cases, you should provide sane defaults and publishing the config
-    | should be optional.
-    |
-    | Here, we'll define a few inspirational quotes for use in our component
-    | and console command.
+    | This configuration file is for the Sage Native Block package.
+    | Currently, it does not hold specific settings but provides a place
+    | for future configuration options related to block scaffolding or
+    | management within Sage themes using Acorn.
     |
     */
 
-    'quotes' => [
-        'For every Sage there is an Acorn.',
-    ],
+    // Example configuration options can be added here in the future.
+    // 'setting' => 'value',
+
 ];

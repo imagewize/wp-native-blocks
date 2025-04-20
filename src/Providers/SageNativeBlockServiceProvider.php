@@ -4,7 +4,6 @@ namespace Imagewize\SageNativeBlockPackage\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Imagewize\SageNativeBlockPackage\Console\SageNativeBlockCommand;
-use Imagewize\SageNativeBlockPackage\SageNativeBlock;
 
 class SageNativeBlockServiceProvider extends ServiceProvider
 {
@@ -15,10 +14,6 @@ class SageNativeBlockServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('SageNativeBlock', function () {
-            return new SageNativeBlock($this->app);
-        });
-
         $this->mergeConfigFrom(
             __DIR__.'/../../config/sage-native-block.php',
             'sage-native-block'
@@ -36,15 +31,8 @@ class SageNativeBlockServiceProvider extends ServiceProvider
             __DIR__.'/../../config/sage-native-block.php' => $this->app->configPath('sage-native-block.php'),
         ], 'config');
 
-        $this->loadViewsFrom(
-            __DIR__.'/../../resources/views',
-            'SageNativeBlock',
-        );
-
         $this->commands([
             SageNativeBlockCommand::class,
         ]);
-
-        $this->app->make('SageNativeBlock');
     }
 }
