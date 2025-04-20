@@ -183,8 +183,7 @@ class SageNativeBlockCommand extends Command
                 return static::FAILURE;
             }
             
-            // Update CSS and JS files to include block assets
-            $this->updateCssFile($rootsFiles);
+            // Update JS file to include block assets
             $this->updateJsFile($rootsFiles);
 
             return static::SUCCESS;
@@ -390,36 +389,6 @@ PHP;
         $className = 'wp-block-' . str_replace('/', '-', $fullBlockName);
         // Replace the placeholder class literal.
         return str_replace('.wp-block-vendor-example-block', ".{$className}", $content);
-    }
-
-    /**
-     * Update app.css to dynamically include CSS from all blocks.
-     */
-    protected function updateCssFile(RootsFilesystem $rootsFiles): void
-    {
-        $cssPath = $this->resolvePath($rootsFiles, 'resources/css/app.css');
-
-        if (! $this->files->exists($cssPath)) {
-            $this->warn("CSS file not found at {$cssPath}. Creating it...");
-            // Use actual newlines for clarity
-            $initialCssContent = "/**" . PHP_EOL . " * App entrypoint" . PHP_EOL . " */" . PHP_EOL;
-            $this->files->put($cssPath, $initialCssContent);
-        }
-
-        // Read content after potential creation
-        $cssContent = $this->files->get($cssPath);
-
-        $directive = '@import "../js/blocks/**/*.css";';
-        $altDirective = '@source "../js/blocks/**/";'; // Handle potential alternative syntax
-
-        if (! str_contains($cssContent, $directive) && ! str_contains($cssContent, $altDirective)) {
-            // Use PHP_EOL for cross-platform compatibility
-            $cssToAdd = PHP_EOL . PHP_EOL . "/**" . PHP_EOL . " * Import block styles" . PHP_EOL . " */" . PHP_EOL . $directive . PHP_EOL;
-            $this->files->append($cssPath, $cssToAdd);
-            $this->info("Added block CSS import directive to {$cssPath}");
-        } else {
-            $this->info("Block CSS import directive already exists in {$cssPath}");
-        }
     }
 
     /**
