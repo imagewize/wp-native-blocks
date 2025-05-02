@@ -52,7 +52,7 @@ This will:
 To create a block with a custom name:
 
 ```shell
-$ wp acorn sage-native-block:add-setup my-cool-block
+wp acorn sage-native-block:add-setup my-cool-block
 ```
 
 This will create a block named `vendor/my-cool-block` with all the necessary files.
@@ -62,7 +62,7 @@ This will create a block named `vendor/my-cool-block` with all the necessary fil
 To create a block with a specific vendor prefix:
 
 ```shell
-$ wp acorn sage-native-block:add-setup imagewize/my-cool-block
+wp acorn sage-native-block:add-setup imagewize/my-cool-block
 ```
 
 This creates a block with proper namespace `imagewize/my-cool-block`.
@@ -72,9 +72,9 @@ This creates a block with proper namespace `imagewize/my-cool-block`.
 Use the `--force` flag to skip the confirmation prompt:
 
 ```shell
-$ wp acorn sage-native-block:add-setup --force
-$ wp acorn sage-native-block:add-setup my-block-name --force
-$ wp acorn sage-native-block:add-setup imagewize/custom-block --force
+wp acorn sage-native-block:add-setup --force
+wp acorn sage-native-block:add-setup my-block-name --force
+wp acorn sage-native-block:add-setup imagewize/custom-block --force
 ```
 
 ## Block Structure
