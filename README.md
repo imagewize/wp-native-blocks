@@ -13,12 +13,13 @@ This package helps you create and manage native Gutenberg blocks in your [Sage](
 
 ## Installation
 
-You can install this package with Composer:
+You can install this package with Composer from your Sage 11+ theme root directory (not from the Bedrock root):
 
 ```bash
-composer require imagewize/sage-native-block
+composer require imagewize/sage-native-block --dev
 ```
 
+**NB** You can drop `--dev` but then it will be included in your production build.
 You can publish the config file with:
 
 ```shell
