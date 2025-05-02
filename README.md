@@ -20,11 +20,17 @@ composer require imagewize/sage-native-block --dev
 ```
 
 **NB** You can drop `--dev` but then it will be included in your production build.
+
+
+## Configuration
+
 You can publish the config file with:
 
 ```shell
-$ wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\SageNativeBlockServiceProvider"
+wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\SageNativeBlockServiceProvider"
 ```
+
+**NB**: This is optional. The package will work without this step. Future version will containe configuration options.
 
 ## Usage
 
@@ -33,7 +39,7 @@ $ wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers
 Run the sage-native-block command to create a block with default settings:
 
 ```shell
-$ wp acorn sage-native-block:add-setup
+wp acorn sage-native-block:add-setup
 ```
 
 This will:
