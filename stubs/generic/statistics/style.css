@@ -1,0 +1,20 @@
+/**
+ * Block styling for both frontend & backend.
+ *
+ * This is a minimal generic template. Add your own styles below
+ * or use your theme's global styles from theme.json.
+ */
+.wp-block-vendor-example-block {
+  width: 100%;
+}
+
+/* Responsive: Stack columns on mobile */
+@media screen and (max-width: 781px) {
+  .wp-block-vendor-example-block .wp-block-columns {
+    flex-direction: column;
+  }
+
+  .wp-block-vendor-example-block .wp-block-column + .wp-block-column {
+    margin-top: 2rem;
+  }
+}

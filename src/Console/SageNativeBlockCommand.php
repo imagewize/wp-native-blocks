@@ -37,8 +37,9 @@ class SageNativeBlockCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'sage-native-block:add-setup 
+    protected $signature = 'sage-native-block:add-setup
                             {blockName? : The name of the block (e.g., "my-block" or "vendor/my-block"), defaults to example-block}
+                            {--template= : Block template type (basic, innerblocks, two-column, statistics, cta)}
                             {--force : Force the operation to run without confirmation}';
 
     /**
@@ -122,6 +123,17 @@ class SageNativeBlockCommand extends Command
             $fullBlockName = $blockNameInput;
         }
 
+        // Get template from option or prompt user
+        $template = $this->option('template') ?? $this->promptForTemplate();
+
+        // Validate template exists
+        if (!$this->isValidTemplate($template)) {
+            $this->error("Template '{$template}' not found in configuration.");
+            return static::FAILURE;
+        }
+
+        $this->info("Using template: {$template}");
+
         $setupPath = $this->resolvePath($rootsFiles, 'app/setup.php');
 
         if (! $this->files->exists($setupPath)) {
@@ -171,7 +183,7 @@ class SageNativeBlockCommand extends Command
             }
 
             // Copy block template files using the full name for replacements and directory name for path
-            if ($this->copyBlockStubs($rootsFiles, $fullBlockName, $directoryBlockName)) {
+            if ($this->copyBlockStubs($rootsFiles, $fullBlockName, $directoryBlockName, $template)) {
                 $this->info("Successfully copied block template files to theme resources directory.");
             } else {
                  // If copying fails, potentially revert setup.php if it was modified in this run
@@ -253,11 +265,14 @@ PHP;
      * Copy block stub files to the theme's resources directory.
      * Uses directoryBlockName for the target path and fullBlockName for replacements.
      */
-    protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $fullBlockName, string $directoryBlockName): bool
+    protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $fullBlockName, string $directoryBlockName, string $template): bool
     {
         try {
+            // Get stub path from config
+            $stubPath = $this->getStubPath($template);
+
             // Source stub directory
-            $stubsDir = dirname(__DIR__, 2).'/stubs/block';
+            $stubsDir = dirname(__DIR__, 2).'/stubs/'.$stubPath;
 
             // Target directory in the theme using the directoryBlockName
             $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$directoryBlockName}");
@@ -291,7 +306,7 @@ PHP;
 
                 if ($this->files->exists($source)) {
                     $content = $this->files->get($source);
-                    
+
                     // Use the full block name for replacements
                     if ($file === 'block.json') {
                         $content = $this->replaceBlockName($content, $fullBlockName);
@@ -304,7 +319,11 @@ PHP;
                     elseif ($file === 'view.js') {
                         $content = $this->replaceJsClassName($content, $fullBlockName);
                     }
-                    
+                    // Replace class name placeholder in editor.jsx
+                    elseif ($file === 'editor.jsx') {
+                        $content = $this->replaceEditorClassName($content, $fullBlockName);
+                    }
+
                     $this->files->put($target, $content);
                     $this->line("Copied and processed: {$file}");
                 } else {
@@ -392,6 +411,16 @@ PHP;
     }
 
     /**
+     * Replace class name placeholder in editor.jsx files.
+     */
+    protected function replaceEditorClassName(string $content, string $fullBlockName): string
+    {
+        $className = 'wp-block-' . str_replace('/', '-', $fullBlockName);
+        // Replace the {{BLOCK_CLASS_NAME}} placeholder
+        return str_replace('{{BLOCK_CLASS_NAME}}', $className, $content);
+    }
+
+    /**
      * Update editor.js to import block index.js files for the editor.
      */
     protected function updateJsFile(RootsFilesystem $rootsFiles): void
@@ -437,5 +466,60 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
                 $this->info("Block JS import code already exists in {$jsPath}");
             }
         }
+    }
+
+    /**
+     * Prompt user to select a template interactively.
+     */
+    protected function promptForTemplate(): string
+    {
+        $templates = config('sage-native-block.templates', []);
+
+        if (empty($templates)) {
+            $this->warn('No templates found in configuration. Using default.');
+            return config('sage-native-block.default_template', 'basic');
+        }
+
+        $choices = [];
+        $keys = [];
+        foreach ($templates as $key => $template) {
+            $choices[] = "{$template['name']} - {$template['description']}";
+            $keys[] = $key;
+        }
+
+        $defaultIndex = array_search(config('sage-native-block.default_template', 'basic'), $keys);
+        if ($defaultIndex === false) {
+            $defaultIndex = 0;
+        }
+
+        $selection = $this->choice('Which template would you like to use?', $choices, $defaultIndex);
+
+        // Find the index of the selected choice
+        $selectedIndex = array_search($selection, $choices);
+
+        return $keys[$selectedIndex];
+    }
+
+    /**
+     * Validate if a template exists in the configuration.
+     */
+    protected function isValidTemplate(string $template): bool
+    {
+        $templates = config('sage-native-block.templates', []);
+        return isset($templates[$template]);
+    }
+
+    /**
+     * Get the stub path for a given template.
+     */
+    protected function getStubPath(string $template): string
+    {
+        $templates = config('sage-native-block.templates', []);
+
+        if (!isset($templates[$template])) {
+            return 'block'; // Fallback to default
+        }
+
+        return $templates[$template]['stub_path'] ?? 'block';
     }
 }

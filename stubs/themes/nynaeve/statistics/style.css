@@ -1,0 +1,49 @@
+/**
+ * Block styling for both frontend & backend.
+ */
+.wp-block-vendor-example-block {
+  width: 100%;
+}
+
+/* Statistics row styling */
+.wp-block-vendor-example-block .statistics-row {
+  margin-bottom: 2rem;
+}
+
+/* Benefits row styling */
+.wp-block-vendor-example-block .benefits-row {
+  margin-bottom: 0;
+}
+
+/* Benefit items - add icon support via ::before */
+.wp-block-vendor-example-block .benefit-item {
+  text-align: center;
+  position: relative;
+}
+
+/* Optional: Add icon placeholder via CSS */
+.wp-block-vendor-example-block .benefit-item::before {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.5rem;
+  /* Add background-image or icon font here */
+  /* background: url('icon.svg') no-repeat center; */
+  /* background-size: contain; */
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 781px) {
+  .wp-block-vendor-example-block .wp-block-columns {
+    flex-direction: column;
+  }
+
+  .wp-block-vendor-example-block .wp-block-column {
+    margin-bottom: 2rem;
+  }
+
+  .wp-block-vendor-example-block .wp-block-column:last-child {
+    margin-bottom: 0;
+  }
+}

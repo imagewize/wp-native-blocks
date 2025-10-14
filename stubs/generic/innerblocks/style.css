@@ -1,0 +1,15 @@
+/**
+ * Block styling for both frontend & backend.
+ *
+ * This is a minimal generic template. Add your own styles below
+ * or use your theme's global styles from theme.json.
+ */
+.wp-block-vendor-example-block {
+  /* Container styles */
+  width: 100%;
+}
+
+/* Optional: Add spacing between nested blocks */
+.wp-block-vendor-example-block > * + * {
+  margin-top: 1.5rem;
+}
