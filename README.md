@@ -50,6 +50,40 @@ This will:
 3. Add block registration code to your theme's `app/setup.php` if not already present
 4. Update `resources/js/editor.js` to import the block files
 
+## Command Output
+
+The package provides a clean, professional terminal interface:
+
+```
+🔨 Creating block: imagewize/my-stats
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Template:  Statistics Section (Generic)
+  Location:  resources/js/blocks/my-stats
+
+  Continue? (yes/no) [no]: yes
+
+Setup:
+  ✓ Block registration configured
+  ✓ Editor imports configured
+
+Files:
+  ✓ block.json, index.js
+  ✓ editor.jsx, save.jsx
+  ✓ editor.css, style.css
+  ✓ view.js
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Success! Block ready at resources/js/blocks/my-stats
+```
+
+**Features:**
+- Clear visual hierarchy with emoji header and separators
+- Color-coded output for easy scanning
+- Check marks (✓) for quick status updates
+- Grouped file operations reduce noise
+- Relative paths for better readability
+
 ### Block Templates
 
 The package includes templates in two categories:
@@ -164,73 +198,46 @@ The command creates the following files in your `resources/js/blocks/<block-name
 - `style.css` - Styles for the block on the frontend
 - `view.js` - Frontend JavaScript for the block
 
-## Notes
+## How It Works
 
-- The block.json's `name` will always include a vendor prefix (e.g., `vendor/cool-block` or `imagewize/my-cool-block`)
-- The block.json's `textdomain` will match the vendor prefix
-- The default CSS class will be based on the full block name (e.g., `wp-block-vendor-cool-block`)
-- Block styles and scripts are automatically registered via the `block.json` file
-- The command will also ensure your theme's `editor.js` file imports all block index.js files
+The command automatically handles:
+- **Block naming** - Ensures proper vendor prefixes (e.g., `imagewize/my-block`)
+- **CSS classes** - Generates block-specific classes (e.g., `wp-block-imagewize-my-block`)
+- **Registration** - Adds code to `app/setup.php` to auto-register all blocks
+- **Imports** - Updates `resources/js/editor.js` to load block scripts
+- **File structure** - Creates organized directory with all 7 required files
 
-## File Structure Example
-
-For a block named `imagewize/testimonial`, the command will create:
-
+**Example structure for `imagewize/testimonial`:**
 ```
 resources/js/blocks/testimonial/
-├── block.json
-├── editor.css
-├── editor.jsx
-├── index.js
-├── save.jsx
-├── style.css
-└── view.js
+├── block.json      ← Block metadata
+├── index.js        ← Registration entry point
+├── editor.jsx      ← Edit component
+├── save.jsx        ← Save component
+├── editor.css      ← Editor-only styles
+├── style.css       ← Frontend styles
+└── view.js         ← Frontend JavaScript
 ```
 
-## Template Customization
+> 💡 For technical details on the build process and architecture, see [Developer Documentation](docs/DEV.md)
 
-### Customizing Typography and Spacing
+## Customization
 
-After publishing the config file, you can customize typography and spacing presets in `config/sage-native-block.php`:
+### Typography and Spacing Presets
 
-```php
-'typography_presets' => [
-    'main_heading' => [
-        'fontFamily' => 'your-font',
-        'fontSize' => '4xl',
-        'fontWeight' => '800',
-        'textColor' => 'primary',
-    ],
-    // ... customize other presets
-],
-
-'spacing_presets' => [
-    'section_bottom' => '5rem',
-    'column_gap_large' => '4rem',
-    // ... customize spacing
-],
-```
-
-These presets are used in the InnerBlocks templates to ensure consistency across your theme.
+After publishing the config file (`wp acorn vendor:publish`), you can customize typography and spacing presets in `config/sage-native-block.php` to match your theme's design system.
 
 ### Creating Custom Templates
 
-You can add your own custom templates by:
+Want to create your own block templates? See the [Developer Documentation](docs/DEV.md#creating-custom-templates) for detailed instructions on:
+- Template file requirements
+- Placeholder system
+- Registration process
+- Best practices
 
-1. Creating a new stub directory: `stubs/your-template/`
-2. Adding all required block files (block.json, editor.jsx, save.jsx, etc.)
-3. Registering it in the config:
+### Contributing Templates
 
-```php
-'templates' => [
-    // ... existing templates
-    'your-template' => [
-        'name' => 'Your Template Name',
-        'description' => 'Description of your template',
-        'stub_path' => 'your-template',
-    ],
-],
-```
+Have templates from your production theme? We welcome community contributions! Check the [Theme Templates Guide](stubs/themes/README.md) for guidelines on contributing theme-specific templates.
 
 ## Benefits of Using Templates
 
