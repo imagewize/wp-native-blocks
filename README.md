@@ -65,20 +65,23 @@ Universal templates that work with ANY theme - no dependencies required:
 | **statistics** | Simple statistics layout | Impact metrics, key numbers |
 | **cta** | Basic call-to-action with button | Lead generation, conversions |
 
-#### 🎨 Styled Example Templates (Advanced)
-⚠️ **Requires specific theme.json configuration:**
+#### 🎨 Theme-Specific Templates
+
+Real-world examples from production themes. Currently featuring templates from the **[Nynaeve theme](https://github.com/imagewize/nynaeve)** by Imagewize.
+
+⚠️ **Nynaeve theme requirements:**
 - Font families: `montserrat`, `open-sans`
 - Color slugs: `main`, `secondary`, `tertiary`, `base`
 - Font sizes: `3xl`, `2xl`, `xl`, `lg`, `base`, `sm`
 
 | Template | Description | Use Case |
 |----------|-------------|----------|
-| **innerblocks-styled** | Pre-styled with typography and spacing | Reference implementation for your theme |
-| **two-column-styled** | Card-style columns with full styling | Polished two-column sections |
-| **statistics-styled** | Complete statistics section | Production-ready stats display |
-| **cta-styled** | Fully styled CTA section | Ready-to-use call-to-action |
+| **nynaeve-innerblocks** | Pre-styled with Nynaeve typography | Production-ready container |
+| **nynaeve-two-column** | Card-style layout from Nynaeve | Polished two-column sections |
+| **nynaeve-statistics** | Complete statistics from Nynaeve | Production-ready stats display |
+| **nynaeve-cta** | Styled CTA from Nynaeve theme | Ready-to-use call-to-action |
 
-> 💡 **Tip:** Start with generic templates and add your own theme styles, or use styled examples as reference if your theme.json matches the requirements.
+> 💡 **Tip:** Use generic templates for universal compatibility, or Nynaeve templates if your theme matches its setup. See [`stubs/themes/nynaeve/README.md`](stubs/themes/nynaeve/README.md) for detailed requirements.
 
 ### Interactive template selection
 
@@ -96,10 +99,10 @@ Which template would you like to use?
   [2] Two Column Layout (Generic)
   [3] Statistics Section (Generic)
   [4] Call-to-Action (Generic)
-  [5] InnerBlocks Container (Styled Example) ⚠️ Requires theme.json setup
-  [6] Two Column Layout (Styled Example) ⚠️ Requires theme.json setup
-  [7] Statistics Section (Styled Example) ⚠️ Requires theme.json setup
-  [8] Call-to-Action (Styled Example) ⚠️ Requires theme.json setup
+  [5] InnerBlocks (Nynaeve Theme) - montserrat, open-sans fonts
+  [6] Two Column (Nynaeve Theme) - montserrat, open-sans fonts
+  [7] Statistics (Nynaeve Theme) - montserrat, open-sans fonts
+  [8] CTA (Nynaeve Theme) - montserrat, open-sans fonts
 ```
 
 ### Direct template selection
@@ -113,11 +116,11 @@ wp acorn sage-native-block:add-setup my-cta --template=cta
 wp acorn sage-native-block:add-setup my-columns --template=two-column
 wp acorn sage-native-block:add-setup my-container --template=innerblocks
 
-# Styled examples (requires theme.json setup)
-wp acorn sage-native-block:add-setup my-stats --template=statistics-styled
-wp acorn sage-native-block:add-setup my-cta --template=cta-styled
-wp acorn sage-native-block:add-setup my-columns --template=two-column-styled
-wp acorn sage-native-block:add-setup my-container --template=innerblocks-styled
+# Nynaeve theme templates (requires Nynaeve theme.json setup)
+wp acorn sage-native-block:add-setup my-stats --template=nynaeve-statistics
+wp acorn sage-native-block:add-setup my-cta --template=nynaeve-cta
+wp acorn sage-native-block:add-setup my-columns --template=nynaeve-two-column
+wp acorn sage-native-block:add-setup my-container --template=nynaeve-innerblocks
 ```
 
 ### Creating a block with custom vendor prefix
@@ -133,7 +136,11 @@ This creates a block with proper namespace `imagewize/my-cool-block`.
 ### Combining all options
 
 ```shell
+# Generic template with vendor prefix
 wp acorn sage-native-block:add-setup imagewize/my-stats --template=statistics --force
+
+# Nynaeve theme template with vendor prefix
+wp acorn sage-native-block:add-setup imagewize/my-stats --template=nynaeve-statistics --force
 ```
 
 ### Skipping confirmation

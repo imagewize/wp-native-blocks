@@ -21,8 +21,7 @@ return [
     | includes a name, description, and stub path for generating blocks.
     |
     | GENERIC templates: Minimal styling, works with any theme
-    | EXAMPLES templates: Opinionated styling with theme.json integration
-    |   (requires specific font families and color slugs defined in theme.json)
+    | THEME templates: Real-world examples from specific themes
     |
     */
     'templates' => [
@@ -54,28 +53,28 @@ return [
             'stub_path' => 'generic/cta',
         ],
 
-        // Example Templates - Pre-styled with theme.json values (opinionated)
-        // WARNING: These require specific font families (montserrat, open-sans)
-        // and color slugs (main, secondary, tertiary) in your theme.json
-        'innerblocks-styled' => [
-            'name' => 'InnerBlocks Container (Styled Example)',
-            'description' => 'Pre-styled with typography and spacing ⚠️ Requires theme.json setup',
-            'stub_path' => 'examples/innerblocks',
+        // Nynaeve Theme Templates (by Imagewize)
+        // Based on production Nynaeve theme - requires specific theme.json setup
+        // See: stubs/themes/nynaeve/README.md for requirements
+        'nynaeve-innerblocks' => [
+            'name' => 'InnerBlocks (Nynaeve Theme)',
+            'description' => 'From Nynaeve theme - montserrat, open-sans fonts',
+            'stub_path' => 'themes/nynaeve/innerblocks',
         ],
-        'two-column-styled' => [
-            'name' => 'Two Column Layout (Styled Example)',
-            'description' => 'Card-style columns with typography ⚠️ Requires theme.json setup',
-            'stub_path' => 'examples/two-column',
+        'nynaeve-two-column' => [
+            'name' => 'Two Column (Nynaeve Theme)',
+            'description' => 'Card-style layout from Nynaeve theme',
+            'stub_path' => 'themes/nynaeve/two-column',
         ],
-        'statistics-styled' => [
-            'name' => 'Statistics Section (Styled Example)',
-            'description' => 'Full statistics layout with styling ⚠️ Requires theme.json setup',
-            'stub_path' => 'examples/statistics',
+        'nynaeve-statistics' => [
+            'name' => 'Statistics (Nynaeve Theme)',
+            'description' => 'Full statistics section from Nynaeve theme',
+            'stub_path' => 'themes/nynaeve/statistics',
         ],
-        'cta-styled' => [
-            'name' => 'Call-to-Action (Styled Example)',
-            'description' => 'Styled CTA with button presets ⚠️ Requires theme.json setup',
-            'stub_path' => 'examples/cta',
+        'nynaeve-cta' => [
+            'name' => 'CTA (Nynaeve Theme)',
+            'description' => 'Styled call-to-action from Nynaeve theme',
+            'stub_path' => 'themes/nynaeve/cta',
         ],
     ],
 

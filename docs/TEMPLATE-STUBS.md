@@ -1,8 +1,8 @@
 # Template Stubs Enhancement Plan
 
-**Status:** ✅ Phase 1 COMPLETED (with generic/examples restructure)
+**Status:** ✅ Phase 1 COMPLETED (with generic/themes restructure)
 **Created:** 2025-10-14
-**Updated:** 2025-10-14 - Restructured to generic/examples approach
+**Updated:** 2025-10-14 - Restructured to generic/themes/nynaeve approach
 **Goal:** Extend sage-native-block package to support multiple block templates for faster development
 
 ---
@@ -11,23 +11,26 @@
 
 Phase 1 has been successfully implemented with an important architectural improvement:
 
-### Template Structure: Generic vs. Examples
+### Template Structure: Generic vs. Theme-Specific
 
-The templates have been reorganized into two categories to address the concern about opinionated styling:
+The templates have been reorganized to clearly separate universal templates from theme-specific examples:
 
 ```
 stubs/
 ├── block/                    # Basic template (unchanged)
-├── generic/                  # NEW - Universal templates
+├── generic/                  # Universal templates
 │   ├── innerblocks/         # Minimal styling, works anywhere
 │   ├── two-column/          # Structure only, no theme dependencies
 │   ├── statistics/          # Basic layout, add your own styles
 │   └── cta/                 # Simple CTA structure
-└── examples/                 # NEW - Opinionated, fully-styled templates
-    ├── innerblocks/         # ⚠️ Requires specific theme.json setup
-    ├── two-column/          # ⚠️ Uses montserrat, open-sans fonts
-    ├── statistics/          # ⚠️ Uses main, secondary, tertiary colors
-    └── cta/                 # ⚠️ Pre-configured with theme presets
+└── themes/                   # Real-world theme examples
+    ├── README.md            # How to use & contribute theme templates
+    └── nynaeve/             # Nynaeve theme (imagewize)
+        ├── README.md        # Nynaeve-specific requirements
+        ├── innerblocks/     # Pre-styled for Nynaeve
+        ├── two-column/      # Uses Nynaeve's theme.json
+        ├── statistics/      # Nynaeve-specific styling
+        └── cta/             # Nynaeve-specific configuration
 ```
 
 ### Why This Matters
@@ -40,18 +43,26 @@ stubs/
 - ✅ Perfect starting point for customization
 - 🎯 Recommended for most users
 
-**Example Templates (Styled):**
-- ⚠️ Require specific theme.json configuration
-- ⚠️ Use font families: `montserrat`, `open-sans`
-- ⚠️ Use color slugs: `main`, `secondary`, `tertiary`, `base`
-- ⚠️ Use font sizes: `3xl`, `2xl`, `xl`, `lg`, `base`, `sm`
-- 🎨 Show best practices for theme.json integration
-- 📚 Learning resource for advanced styling
-- 🚀 80% complete if your theme matches
+**Nynaeve Theme Templates:**
+- 🎨 Real-world, production-ready examples
+- 📚 Based on actual Nynaeve theme by Imagewize
+- ⚠️ Requires Nynaeve-specific theme.json setup:
+  - Font families: `montserrat`, `open-sans`
+  - Color slugs: `main`, `secondary`, `tertiary`, `base`
+  - Font sizes: `3xl`, `2xl`, `xl`, `lg`, `base`, `sm`
+- 🚀 80% complete if your theme matches Nynaeve's setup
+- 🔄 Can be cloned and customized for your own theme
+
+**Benefits of Theme-Specific Approach:**
+- ✅ Clear attribution - "This is from Nynaeve theme"
+- ✅ Sets pattern for community contributions
+- ✅ Users can add their own theme templates
+- ✅ Transparency about requirements
+- ✅ Great learning resource for theme.json integration
 
 ### Configuration Updates
 
-The config now clearly separates generic and example templates:
+The config now uses theme-prefixed naming:
 
 ```php
 'templates' => [
@@ -63,17 +74,21 @@ The config now clearly separates generic and example templates:
     'statistics' => ['stub_path' => 'generic/statistics'],
     'cta' => ['stub_path' => 'generic/cta'],
 
-    // Examples - Requires theme setup (⚠️ warnings included)
-    'innerblocks-styled' => ['stub_path' => 'examples/innerblocks'],
-    'two-column-styled' => ['stub_path' => 'examples/two-column'],
-    'statistics-styled' => ['stub_path' => 'examples/statistics'],
-    'cta-styled' => ['stub_path' => 'examples/cta'],
+    // Nynaeve theme templates
+    'nynaeve-innerblocks' => [
+        'name' => 'InnerBlocks (Nynaeve Theme)',
+        'description' => 'From Nynaeve theme - montserrat, open-sans fonts',
+        'stub_path' => 'themes/nynaeve/innerblocks',
+    ],
+    'nynaeve-two-column' => ['stub_path' => 'themes/nynaeve/two-column'],
+    'nynaeve-statistics' => ['stub_path' => 'themes/nynaeve/statistics'],
+    'nynaeve-cta' => ['stub_path' => 'themes/nynaeve/cta'],
 ],
 ```
 
 ### User Experience
 
-When running the command, users will see clear warnings:
+When running the command, users will see clear theme attribution:
 
 ```bash
 $ wp acorn sage-native-block:add-setup my-block
@@ -84,12 +99,39 @@ Which template would you like to use?
   [2] Two Column Layout (Generic)
   [3] Statistics Section (Generic)
   [4] Call-to-Action (Generic)
-  [5] InnerBlocks Container (Styled Example) ⚠️ Requires theme.json setup
-  [6] Two Column Layout (Styled Example) ⚠️ Requires theme.json setup
-  ...
+  [5] InnerBlocks (Nynaeve Theme) - montserrat, open-sans fonts
+  [6] Two Column (Nynaeve Theme) - montserrat, open-sans fonts
+  [7] Statistics (Nynaeve Theme) - montserrat, open-sans fonts
+  [8] CTA (Nynaeve Theme) - montserrat, open-sans fonts
 ```
 
-This makes it crystal clear which templates are safe to use anywhere and which require specific theme configuration.
+**Direct template selection:**
+```bash
+# Generic (works anywhere)
+wp acorn sage-native-block:add-setup my-stats --template=statistics
+
+# Nynaeve theme (requires specific setup)
+wp acorn sage-native-block:add-setup my-stats --template=nynaeve-statistics
+```
+
+This makes it crystal clear:
+- What templates are universal
+- What templates are theme-specific
+- Which theme they come from
+- What requirements they have
+
+### Future: Community Contributions
+
+The `themes/` structure opens the door for community contributions:
+
+```
+stubs/themes/
+├── README.md              # How to contribute
+├── nynaeve/              # By Imagewize
+├── sage-starter/         # Community contribution
+├── acme-corp/            # Another company's templates
+└── your-theme/           # Your custom templates
+```
 
 ---
 
