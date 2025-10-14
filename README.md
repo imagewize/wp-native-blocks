@@ -243,11 +243,4 @@ You can add your own custom templates by:
 
 ## Changelog
 
-### Version 2.0.0 (Phase 1 Implementation)
-
-- Added multiple block templates (basic, innerblocks, two-column, statistics, cta)
-- Added interactive template selection
-- Added `--template` option for direct template selection
-- Added configuration file with typography and spacing presets
-- Updated documentation with template examples
-- Backwards compatible - existing usage still works
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history and release notes.
