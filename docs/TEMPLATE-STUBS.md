@@ -1,8 +1,95 @@
 # Template Stubs Enhancement Plan
 
-**Status:** Planning Phase
+**Status:** ✅ Phase 1 COMPLETED (with generic/examples restructure)
 **Created:** 2025-10-14
+**Updated:** 2025-10-14 - Restructured to generic/examples approach
 **Goal:** Extend sage-native-block package to support multiple block templates for faster development
+
+---
+
+## 🎉 Implementation Update (2025-10-14)
+
+Phase 1 has been successfully implemented with an important architectural improvement:
+
+### Template Structure: Generic vs. Examples
+
+The templates have been reorganized into two categories to address the concern about opinionated styling:
+
+```
+stubs/
+├── block/                    # Basic template (unchanged)
+├── generic/                  # NEW - Universal templates
+│   ├── innerblocks/         # Minimal styling, works anywhere
+│   ├── two-column/          # Structure only, no theme dependencies
+│   ├── statistics/          # Basic layout, add your own styles
+│   └── cta/                 # Simple CTA structure
+└── examples/                 # NEW - Opinionated, fully-styled templates
+    ├── innerblocks/         # ⚠️ Requires specific theme.json setup
+    ├── two-column/          # ⚠️ Uses montserrat, open-sans fonts
+    ├── statistics/          # ⚠️ Uses main, secondary, tertiary colors
+    └── cta/                 # ⚠️ Pre-configured with theme presets
+```
+
+### Why This Matters
+
+**Generic Templates:**
+- ✅ Work with ANY theme out of the box
+- ✅ No font family dependencies
+- ✅ No color slug requirements
+- ✅ Minimal, unopinionated CSS
+- ✅ Perfect starting point for customization
+- 🎯 Recommended for most users
+
+**Example Templates (Styled):**
+- ⚠️ Require specific theme.json configuration
+- ⚠️ Use font families: `montserrat`, `open-sans`
+- ⚠️ Use color slugs: `main`, `secondary`, `tertiary`, `base`
+- ⚠️ Use font sizes: `3xl`, `2xl`, `xl`, `lg`, `base`, `sm`
+- 🎨 Show best practices for theme.json integration
+- 📚 Learning resource for advanced styling
+- 🚀 80% complete if your theme matches
+
+### Configuration Updates
+
+The config now clearly separates generic and example templates:
+
+```php
+'templates' => [
+    'basic' => [...],
+
+    // Generic - Works everywhere
+    'innerblocks' => ['stub_path' => 'generic/innerblocks'],
+    'two-column' => ['stub_path' => 'generic/two-column'],
+    'statistics' => ['stub_path' => 'generic/statistics'],
+    'cta' => ['stub_path' => 'generic/cta'],
+
+    // Examples - Requires theme setup (⚠️ warnings included)
+    'innerblocks-styled' => ['stub_path' => 'examples/innerblocks'],
+    'two-column-styled' => ['stub_path' => 'examples/two-column'],
+    'statistics-styled' => ['stub_path' => 'examples/statistics'],
+    'cta-styled' => ['stub_path' => 'examples/cta'],
+],
+```
+
+### User Experience
+
+When running the command, users will see clear warnings:
+
+```bash
+$ wp acorn sage-native-block:add-setup my-block
+
+Which template would you like to use?
+  [0] Basic Block
+  [1] InnerBlocks Container (Generic)
+  [2] Two Column Layout (Generic)
+  [3] Statistics Section (Generic)
+  [4] Call-to-Action (Generic)
+  [5] InnerBlocks Container (Styled Example) ⚠️ Requires theme.json setup
+  [6] Two Column Layout (Styled Example) ⚠️ Requires theme.json setup
+  ...
+```
+
+This makes it crystal clear which templates are safe to use anywhere and which require specific theme configuration.
 
 ---
 

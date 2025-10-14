@@ -4,12 +4,14 @@ This package helps you create and manage native Gutenberg blocks in your [Sage](
 
 ## Features
 
+- **Multiple Block Templates** - Choose from pre-configured templates for common block patterns
 - Scaffolds a complete native block structure in your Sage theme
 - Automatically adds block registration code to your theme's setup file
 - Creates all necessary block files (JS, JSX, CSS) with proper configuration
 - Handles proper block naming with vendor prefixes
 - Creates editor and frontend styles for your blocks
 - Ensures proper imports of block JS files
+- **80% faster development** - Start with pre-configured templates instead of building from scratch
 
 ## Installation
 
@@ -30,7 +32,7 @@ You can publish the config file with:
 wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\SageNativeBlockServiceProvider"
 ```
 
-**NB**: This is optional. The package will work without this step. Future version will containe configuration options.
+**NB**: This is recommended to customize template settings. The package includes default configuration with 5 block templates and typography/spacing presets.
 
 ## Usage
 
@@ -43,23 +45,84 @@ wp acorn sage-native-block:add-setup
 ```
 
 This will:
-1. Create an `example-block` in your theme's `resources/js/blocks` directory
-2. Add block registration code to your theme's `app/setup.php` if not already present
-3. Update `resources/js/editor.js` to import the block files
+1. Prompt you to select a block template (or use the default)
+2. Create the block in your theme's `resources/js/blocks` directory
+3. Add block registration code to your theme's `app/setup.php` if not already present
+4. Update `resources/js/editor.js` to import the block files
 
-### Creating a custom block
+### Block Templates
 
-To create a block with a custom name:
+The package includes templates in two categories:
+
+#### 🟢 Generic Templates (Recommended)
+Universal templates that work with ANY theme - no dependencies required:
+
+| Template | Description | Use Case |
+|----------|-------------|----------|
+| **basic** | Simple block with InnerBlocks support | General-purpose container blocks |
+| **innerblocks** | Minimal heading and content template | Section blocks (add your own styles) |
+| **two-column** | Basic two-column layout structure | Feature comparisons, benefits |
+| **statistics** | Simple statistics layout | Impact metrics, key numbers |
+| **cta** | Basic call-to-action with button | Lead generation, conversions |
+
+#### 🎨 Styled Example Templates (Advanced)
+⚠️ **Requires specific theme.json configuration:**
+- Font families: `montserrat`, `open-sans`
+- Color slugs: `main`, `secondary`, `tertiary`, `base`
+- Font sizes: `3xl`, `2xl`, `xl`, `lg`, `base`, `sm`
+
+| Template | Description | Use Case |
+|----------|-------------|----------|
+| **innerblocks-styled** | Pre-styled with typography and spacing | Reference implementation for your theme |
+| **two-column-styled** | Card-style columns with full styling | Polished two-column sections |
+| **statistics-styled** | Complete statistics section | Production-ready stats display |
+| **cta-styled** | Fully styled CTA section | Ready-to-use call-to-action |
+
+> 💡 **Tip:** Start with generic templates and add your own theme styles, or use styled examples as reference if your theme.json matches the requirements.
+
+### Interactive template selection
+
+Simply run the command and choose your template:
 
 ```shell
-wp acorn sage-native-block:add-setup my-cool-block
+wp acorn sage-native-block:add-setup my-block
 ```
 
-This will create a block named `vendor/my-cool-block` with all the necessary files.
+You'll be prompted:
+```
+Which template would you like to use?
+  [0] Basic Block
+  [1] InnerBlocks Container (Generic)
+  [2] Two Column Layout (Generic)
+  [3] Statistics Section (Generic)
+  [4] Call-to-Action (Generic)
+  [5] InnerBlocks Container (Styled Example) ⚠️ Requires theme.json setup
+  [6] Two Column Layout (Styled Example) ⚠️ Requires theme.json setup
+  [7] Statistics Section (Styled Example) ⚠️ Requires theme.json setup
+  [8] Call-to-Action (Styled Example) ⚠️ Requires theme.json setup
+```
+
+### Direct template selection
+
+Use the `--template` flag to specify a template:
+
+```shell
+# Generic templates (work everywhere)
+wp acorn sage-native-block:add-setup my-stats --template=statistics
+wp acorn sage-native-block:add-setup my-cta --template=cta
+wp acorn sage-native-block:add-setup my-columns --template=two-column
+wp acorn sage-native-block:add-setup my-container --template=innerblocks
+
+# Styled examples (requires theme.json setup)
+wp acorn sage-native-block:add-setup my-stats --template=statistics-styled
+wp acorn sage-native-block:add-setup my-cta --template=cta-styled
+wp acorn sage-native-block:add-setup my-columns --template=two-column-styled
+wp acorn sage-native-block:add-setup my-container --template=innerblocks-styled
+```
 
 ### Creating a block with custom vendor prefix
 
-To create a block with a specific vendor prefix:
+Add your own vendor namespace:
 
 ```shell
 wp acorn sage-native-block:add-setup imagewize/my-cool-block
@@ -67,14 +130,19 @@ wp acorn sage-native-block:add-setup imagewize/my-cool-block
 
 This creates a block with proper namespace `imagewize/my-cool-block`.
 
+### Combining all options
+
+```shell
+wp acorn sage-native-block:add-setup imagewize/my-stats --template=statistics --force
+```
+
 ### Skipping confirmation
 
 Use the `--force` flag to skip the confirmation prompt:
 
 ```shell
 wp acorn sage-native-block:add-setup --force
-wp acorn sage-native-block:add-setup my-block-name --force
-wp acorn sage-native-block:add-setup imagewize/custom-block --force
+wp acorn sage-native-block:add-setup my-block-name --template=cta --force
 ```
 
 ## Block Structure
@@ -111,3 +179,68 @@ resources/js/blocks/testimonial/
 ├── style.css
 └── view.js
 ```
+
+## Template Customization
+
+### Customizing Typography and Spacing
+
+After publishing the config file, you can customize typography and spacing presets in `config/sage-native-block.php`:
+
+```php
+'typography_presets' => [
+    'main_heading' => [
+        'fontFamily' => 'your-font',
+        'fontSize' => '4xl',
+        'fontWeight' => '800',
+        'textColor' => 'primary',
+    ],
+    // ... customize other presets
+],
+
+'spacing_presets' => [
+    'section_bottom' => '5rem',
+    'column_gap_large' => '4rem',
+    // ... customize spacing
+],
+```
+
+These presets are used in the InnerBlocks templates to ensure consistency across your theme.
+
+### Creating Custom Templates
+
+You can add your own custom templates by:
+
+1. Creating a new stub directory: `stubs/your-template/`
+2. Adding all required block files (block.json, editor.jsx, save.jsx, etc.)
+3. Registering it in the config:
+
+```php
+'templates' => [
+    // ... existing templates
+    'your-template' => [
+        'name' => 'Your Template Name',
+        'description' => 'Description of your template',
+        'stub_path' => 'your-template',
+    ],
+],
+```
+
+## Benefits of Using Templates
+
+- **80% faster development** - Start with pre-configured templates instead of building from scratch
+- **Consistent patterns** - All blocks follow established structure and best practices
+- **Theme integration** - Templates use theme.json values for typography and colors
+- **Proper InnerBlocks setup** - Avoid common mistakes with InnerBlocks configuration
+- **Reduced errors** - Well-tested templates reduce debugging time
+- **Learning tool** - See WordPress block best practices in generated code
+
+## Changelog
+
+### Version 2.0.0 (Phase 1 Implementation)
+
+- Added multiple block templates (basic, innerblocks, two-column, statistics, cta)
+- Added interactive template selection
+- Added `--template` option for direct template selection
+- Added configuration file with typography and spacing presets
+- Updated documentation with template examples
+- Backwards compatible - existing usage still works

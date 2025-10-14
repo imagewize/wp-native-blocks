@@ -1,0 +1,23 @@
+/**
+ * Block styling for both frontend & backend.
+ */
+.wp-block-vendor-example-block {
+  /* Container styles */
+  width: 100%;
+}
+
+/* Ensure proper spacing for nested blocks */
+.wp-block-vendor-example-block > * {
+  margin-bottom: 1.5rem;
+}
+
+.wp-block-vendor-example-block > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive adjustments */
+@media screen and (min-width: 768px) {
+  .wp-block-vendor-example-block > * {
+    margin-bottom: 2rem;
+  }
+}

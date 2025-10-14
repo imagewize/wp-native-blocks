@@ -1,0 +1,41 @@
+/**
+ * Block styling for both frontend & backend.
+ */
+.wp-block-vendor-example-block {
+  width: 100%;
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+/* Button group styling */
+.wp-block-vendor-example-block .wp-block-buttons {
+  margin-top: 0;
+}
+
+/* Individual button styling */
+.wp-block-vendor-example-block .wp-block-button {
+  margin-bottom: 0;
+}
+
+/* Ensure buttons wrap nicely on mobile */
+@media screen and (max-width: 600px) {
+  .wp-block-vendor-example-block .wp-block-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wp-block-vendor-example-block .wp-block-button {
+    margin-bottom: 1rem;
+  }
+
+  .wp-block-vendor-example-block .wp-block-button:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Responsive padding adjustments */
+@media screen and (min-width: 768px) {
+  .wp-block-vendor-example-block {
+    padding: 4rem 2rem;
+  }
+}
