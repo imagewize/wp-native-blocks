@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-10-14
+
+### Changed - BREAKING CHANGES
+
+- **Command renamed** - `sage-native-block:add-setup` is now `sage-native-block:create`
+  - More intuitive naming that better reflects the command's purpose
+  - Existing automation scripts will need to update the command name
+
+### Added
+
+- **Fully Interactive Mode** - Command now prompts for all inputs when run without arguments
+  - Interactive block name prompt with examples
+  - Interactive vendor prefix prompt with default option
+  - Visual welcome message and guided flow
+  - Much improved user experience for developers creating blocks
+- **Smart Input Handling** - Command adapts based on provided arguments
+  - No arguments: Fully interactive mode
+  - Block name only: Prompts for template selection
+  - All arguments: Non-interactive automation mode
+
+### Improved
+
+- Better onboarding experience for new users
+- Clearer command description emphasizing interactive workflow
+- Updated documentation showcasing interactive-first approach
+- Maintained backward compatibility for automation via CLI arguments
+
+### Migration Guide
+
+If you have scripts using the old command:
+```shell
+# Old (v1.x)
+wp acorn sage-native-block:add-setup my-block --template=cta --force
+
+# New (v2.x)
+wp acorn sage-native-block:create my-block --template=cta --force
+```
+
 ## [1.1.1] - 2025-10-14
 
 ### Changed
@@ -114,7 +152,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration documentation
 - Feature overview and examples
 
-[Unreleased]: https://github.com/imagewize/sage-native-block/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/imagewize/sage-native-block/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/imagewize/sage-native-block/compare/v1.1.1...v2.0.0
 [1.1.1]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/imagewize/sage-native-block/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/imagewize/sage-native-block/compare/v1.0.1...v1.0.2

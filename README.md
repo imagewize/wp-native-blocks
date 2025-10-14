@@ -36,19 +36,32 @@ wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\S
 
 ## Usage
 
-### Creating a new block
+### Creating a new block (Interactive Mode - Recommended)
 
-Run the sage-native-block command to create a block with default settings:
+Simply run the command and follow the prompts:
 
 ```shell
-wp acorn sage-native-block:add-setup
+wp acorn sage-native-block:create
 ```
 
-This will:
-1. Prompt you to select a block template (or use the default)
-2. Create the block in your theme's `resources/js/blocks` directory
-3. Add block registration code to your theme's `app/setup.php` if not already present
-4. Update `resources/js/editor.js` to import the block files
+You'll be guided through an interactive setup:
+1. **Block name**: Enter your block name (e.g., "my-stats")
+2. **Vendor prefix**: Optionally specify a vendor (defaults to "vendor")
+3. **Template selection**: Choose from available block templates
+4. **Confirmation**: Review and confirm your choices
+
+The command will then:
+- Create the block in your theme's `resources/js/blocks` directory
+- Add block registration code to your theme's `app/setup.php` if not already present
+- Update `resources/js/editor.js` to import the block files
+
+### Non-Interactive Mode (for automation)
+
+You can still provide all parameters via CLI arguments:
+
+```shell
+wp acorn sage-native-block:create my-block --template=statistics --force
+```
 
 ## Command Output
 
@@ -117,73 +130,35 @@ Real-world examples from production themes. Currently featuring templates from t
 
 > 💡 **Tip:** Use generic templates for universal compatibility, or Nynaeve templates if your theme matches its setup. See [`stubs/themes/nynaeve/README.md`](stubs/themes/nynaeve/README.md) for detailed requirements.
 
-### Interactive template selection
+### Command Examples
 
-Simply run the command and choose your template:
-
+**Interactive mode (easiest):**
 ```shell
-wp acorn sage-native-block:add-setup my-block
+# Follow prompts to create any block
+wp acorn sage-native-block:create
 ```
 
-You'll be prompted:
-```
-Which template would you like to use?
-  [0] Basic Block
-  [1] InnerBlocks Container (Generic)
-  [2] Two Column Layout (Generic)
-  [3] Statistics Section (Generic)
-  [4] Call-to-Action (Generic)
-  [5] InnerBlocks (Nynaeve Theme) - montserrat, open-sans fonts
-  [6] Two Column (Nynaeve Theme) - montserrat, open-sans fonts
-  [7] Statistics (Nynaeve Theme) - montserrat, open-sans fonts
-  [8] CTA (Nynaeve Theme) - montserrat, open-sans fonts
+**With block name (still prompts for template):**
+```shell
+wp acorn sage-native-block:create my-stats
 ```
 
-### Direct template selection
+**With vendor prefix:**
+```shell
+wp acorn sage-native-block:create imagewize/my-stats
+```
 
-Use the `--template` flag to specify a template:
-
+**Fully automated (no prompts):**
 ```shell
 # Generic templates (work everywhere)
-wp acorn sage-native-block:add-setup my-stats --template=statistics
-wp acorn sage-native-block:add-setup my-cta --template=cta
-wp acorn sage-native-block:add-setup my-columns --template=two-column
-wp acorn sage-native-block:add-setup my-container --template=innerblocks
+wp acorn sage-native-block:create my-stats --template=statistics --force
+wp acorn sage-native-block:create my-cta --template=cta --force
+wp acorn sage-native-block:create my-columns --template=two-column --force
+wp acorn sage-native-block:create my-container --template=innerblocks --force
 
 # Nynaeve theme templates (requires Nynaeve theme.json setup)
-wp acorn sage-native-block:add-setup my-stats --template=nynaeve-statistics
-wp acorn sage-native-block:add-setup my-cta --template=nynaeve-cta
-wp acorn sage-native-block:add-setup my-columns --template=nynaeve-two-column
-wp acorn sage-native-block:add-setup my-container --template=nynaeve-innerblocks
-```
-
-### Creating a block with custom vendor prefix
-
-Add your own vendor namespace:
-
-```shell
-wp acorn sage-native-block:add-setup imagewize/my-cool-block
-```
-
-This creates a block with proper namespace `imagewize/my-cool-block`.
-
-### Combining all options
-
-```shell
-# Generic template with vendor prefix
-wp acorn sage-native-block:add-setup imagewize/my-stats --template=statistics --force
-
-# Nynaeve theme template with vendor prefix
-wp acorn sage-native-block:add-setup imagewize/my-stats --template=nynaeve-statistics --force
-```
-
-### Skipping confirmation
-
-Use the `--force` flag to skip the confirmation prompt:
-
-```shell
-wp acorn sage-native-block:add-setup --force
-wp acorn sage-native-block:add-setup my-block-name --template=cta --force
+wp acorn sage-native-block:create my-stats --template=nynaeve-statistics --force
+wp acorn sage-native-block:create imagewize/my-cta --template=nynaeve-cta --force
 ```
 
 ## Block Structure

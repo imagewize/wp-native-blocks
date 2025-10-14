@@ -7,28 +7,21 @@ use Roots\Acorn\Console\Commands\Command;
 use Roots\Acorn\Filesystem\Filesystem as RootsFilesystem;
 
 /**
- * Command to add native block registration code to the Sage theme setup file and create block files.
+ * Interactive command to create native Gutenberg blocks for your Sage theme.
  *
- * Run this command from your WordPress site root or theme directory:
- * $ wp acorn sage-native-block:add-setup
+ * Interactive mode (recommended):
+ * $ wp acorn sage-native-block:create
+ *   - Prompts for block name with vendor prefix
+ *   - Prompts to select from available templates
+ *   - Shows summary and asks for confirmation
  *
- * To create a block with a custom name (e.g., 'cool-block'):
- * $ wp acorn sage-native-block:add-setup cool-block
- *   (This will create a block named 'vendor/cool-block')
+ * Non-interactive mode (for automation):
+ * $ wp acorn sage-native-block:create my-block --template=statistics --force
  *
- * To create a block with a specific vendor prefix (e.g., 'imagewize/my-cool-block'):
- * $ wp acorn sage-native-block:add-setup imagewize/my-cool-block
- *
- * This will create block files in resources/js/blocks/<block-name-without-vendor>/
+ * This will create block files in resources/js/blocks/<block-name>/
  * The block.json 'name' will always include a vendor prefix (e.g., 'vendor/cool-block' or 'imagewize/my-cool-block').
  * The block.json 'textdomain' will be set to the vendor ('vendor' or 'imagewize').
  * The default CSS class will be 'wp-block-vendor-cool-block' or 'wp-block-imagewize-my-cool-block'.
- *
- * To skip confirmation prompt:
- * $ wp acorn sage-native-block:add-setup --force
- *
- * You can combine parameters:
- * $ wp acorn sage-native-block:add-setup imagewize/my-cool-block --force
  */
 class SageNativeBlockCommand extends Command
 {
@@ -37,17 +30,17 @@ class SageNativeBlockCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'sage-native-block:add-setup
-                            {blockName? : The name of the block (e.g., "my-block" or "vendor/my-block"), defaults to example-block}
+    protected $signature = 'sage-native-block:create
+                            {blockName? : The name of the block (e.g., "my-block" or "vendor/my-block")}
                             {--template= : Block template type (basic, innerblocks, two-column, statistics, cta)}
-                            {--force : Force the operation to run without confirmation}';
+                            {--force : Skip all confirmation prompts}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Add native block registration code to app/setup.php.';
+    protected $description = 'Interactively create a new native Gutenberg block for your Sage theme.';
 
     /**
      * The filesystem instance.
@@ -112,13 +105,37 @@ class SageNativeBlockCommand extends Command
      */
     public function handle(RootsFilesystem $rootsFiles): int
     {
-        // Get block name from argument or use default
-        $blockNameInput = $this->argument('blockName') ?: 'example-block';
+        // Interactive mode: prompt for block name if not provided
+        $blockNameInput = $this->argument('blockName');
+
+        if (!$blockNameInput) {
+            $this->newLine();
+            $this->line('<fg=cyan>Welcome to Sage Native Block Creator!</>');
+            $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            $this->newLine();
+
+            $blockNameInput = $this->ask('What is the block name? (e.g., "my-block" or "vendor/my-block")');
+
+            if (empty($blockNameInput)) {
+                $this->error('Block name is required.');
+                return static::FAILURE;
+            }
+        }
 
         // Ensure block name always has a vendor prefix
         if (!str_contains($blockNameInput, '/')) {
-            $fullBlockName = 'vendor/' . $blockNameInput;
-            $this->comment("No vendor prefix provided. Using default: '{$fullBlockName}'");
+            $defaultVendor = 'vendor';
+
+            // Only prompt for vendor if in interactive mode
+            if (!$this->argument('blockName')) {
+                $vendor = $this->ask("Enter vendor prefix (leave empty for '{$defaultVendor}')");
+                $vendor = !empty($vendor) ? $vendor : $defaultVendor;
+            } else {
+                $vendor = $defaultVendor;
+                $this->comment("No vendor prefix provided. Using default: '{$vendor}'");
+            }
+
+            $fullBlockName = $vendor . '/' . $blockNameInput;
         } else {
             $fullBlockName = $blockNameInput;
         }
