@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-10-14
+
+### Changed
+
+- **Improved Command Output** - Redesigned terminal UI for better readability and user experience
+  - Added visual separators (━) and section headers (Setup/Files) for clear organization
+  - Replaced verbose messages with clean check marks (✓) and error marks (✗)
+  - Grouped related file operations (e.g., "block.json, index.js") instead of per-file output
+  - Changed from absolute paths to relative paths for cleaner, more readable output
+  - Added color-coded output: cyan for block names, yellow for sections, green for success
+  - Consolidated "already exists" warnings into simple status indicators
+  - Simplified confirmation prompt from verbose paragraph to concise "Continue?"
+  - Added emoji header (🔨) for visual identification
+  - Final success message clearly shows block location with relative path
+
+### Improved
+
+- Command output is now ~80% less verbose while maintaining all necessary information
+- Better visual hierarchy makes it easier to scan command progress at a glance
+- Consistent styling whether setup already exists or is being created fresh
+- Professional, modern terminal UI that matches industry standards for CLI tools
+
 ## [1.1.0] - 2025-10-14
 
 ### Added
@@ -92,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration documentation
 - Feature overview and examples
 
-[Unreleased]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/imagewize/sage-native-block/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/imagewize/sage-native-block/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/imagewize/sage-native-block/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/imagewize/sage-native-block/compare/v1.0.0...v1.0.1

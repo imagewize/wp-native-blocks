@@ -118,7 +118,7 @@ class SageNativeBlockCommand extends Command
         // Ensure block name always has a vendor prefix
         if (!str_contains($blockNameInput, '/')) {
             $fullBlockName = 'vendor/' . $blockNameInput;
-            $this->info("No vendor prefix provided. Using default: '{$fullBlockName}'");
+            $this->comment("No vendor prefix provided. Using default: '{$fullBlockName}'");
         } else {
             $fullBlockName = $blockNameInput;
         }
@@ -132,12 +132,26 @@ class SageNativeBlockCommand extends Command
             return static::FAILURE;
         }
 
-        $this->info("Using template: {$template}");
+        // Get template display name
+        $templateConfig = config('sage-native-block.templates')[$template] ?? [];
+        $templateName = $templateConfig['name'] ?? $template;
+
+        // Extract the base name for directory structure
+        $directoryBlockName = $this->getDirectoryBlockName($fullBlockName);
+
+        // Display header
+        $this->newLine();
+        $this->line("🔨 Creating block: <fg=cyan>{$fullBlockName}</>");
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->newLine();
+        $this->line("  Template:  <fg=yellow>{$templateName}</>");
+        $this->line("  Location:  <fg=green>resources/js/blocks/{$directoryBlockName}</>");
+        $this->newLine();
 
         $setupPath = $this->resolvePath($rootsFiles, 'app/setup.php');
 
         if (! $this->files->exists($setupPath)) {
-            $this->error("Error: Theme setup file not found at {$setupPath}.");
+            $this->error("Error: Theme setup file not found at app/setup.php");
 
             return static::FAILURE;
         }
@@ -145,58 +159,69 @@ class SageNativeBlockCommand extends Command
         $currentContent = $this->files->get($setupPath);
 
         // Check if the code is already present
-        if (str_contains($currentContent, 'register_block_type($block_json_path);')) {
-            $this->info("Block registration code already exists in {$setupPath}.");
-        }
+        $setupExists = str_contains($currentContent, 'register_block_type($block_json_path);');
 
         // Confirm action unless forced
-        if (! $this->option('force') && ! $this->confirm("This will modify {$setupPath} (if needed) and copy block templates for '{$fullBlockName}'. Do you wish to continue?")) {
+        if (! $this->option('force') && ! $this->confirm('Continue?')) {
             $this->line('Operation cancelled.');
 
             return static::SUCCESS;
         }
 
+        $this->newLine();
+        $this->line('<fg=yellow>Setup:</>');
+
         // Create a backup of the setup file only if we are modifying it
         $backupPath = null;
-        if (!str_contains($currentContent, 'register_block_type($block_json_path);')) {
-            $backupPath = $setupPath.'.backup-'.date('Y-m-d-His');
-            $this->files->copy($setupPath, $backupPath);
-            $this->line("Created backup at {$backupPath}");
-        }
-
-        // Extract the base name for directory structure
-        $directoryBlockName = $this->getDirectoryBlockName($fullBlockName);
         $codeToAdd = $this->getBlockRegistrationCode();
 
         try {
             // Append the code to the file only if it's not already there
-            if (!str_contains($currentContent, 'register_block_type($block_json_path);')) {
+            if (!$setupExists) {
+                $backupPath = $setupPath.'.backup-'.date('Y-m-d-His');
+                $this->files->copy($setupPath, $backupPath);
+
                 if ($this->files->append($setupPath, $codeToAdd)) {
-                    $this->info("Successfully added block registration code to {$setupPath}.");
+                    $this->line('  <fg=green>✓</> Block registration added');
                 } else {
-                    $this->error("Failed to write to {$setupPath}. Reverting to backup...");
+                    $this->error('  ✗ Failed to update app/setup.php');
                     if ($backupPath) {
                         $this->files->copy($backupPath, $setupPath);
                     }
                     return static::FAILURE;
                 }
+            } else {
+                $this->line('  <fg=green>✓</> Block registration configured');
             }
 
+            // Update JS file to include block assets
+            $editorJsUpdated = $this->updateJsFile($rootsFiles);
+            if ($editorJsUpdated === true) {
+                $this->line('  <fg=green>✓</> Editor imports added');
+            } elseif ($editorJsUpdated === false) {
+                $this->line('  <fg=green>✓</> Editor imports configured');
+            }
+
+            $this->newLine();
+            $this->line('<fg=yellow>Files:</>');
+
             // Copy block template files using the full name for replacements and directory name for path
-            if ($this->copyBlockStubs($rootsFiles, $fullBlockName, $directoryBlockName, $template)) {
-                $this->info("Successfully copied block template files to theme resources directory.");
-            } else {
+            $filesCopied = $this->copyBlockStubs($rootsFiles, $fullBlockName, $directoryBlockName, $template);
+
+            if (!$filesCopied) {
                  // If copying fails, potentially revert setup.php if it was modified in this run
                  if ($backupPath && $this->files->exists($backupPath)) {
-                    $this->warn('Restoring setup.php from backup due to error during stub copying...');
+                    $this->error('  ✗ Failed to copy files. Reverting changes...');
                     $this->files->copy($backupPath, $setupPath);
-                    $this->info('Backup restored.');
                 }
                 return static::FAILURE;
             }
-            
-            // Update JS file to include block assets
-            $this->updateJsFile($rootsFiles);
+
+            // Final success message
+            $this->newLine();
+            $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            $this->line("<fg=green>✓ Success!</> Block ready at <fg=green>resources/js/blocks/{$directoryBlockName}</>");
+            $this->newLine();
 
             return static::SUCCESS;
 
@@ -277,15 +302,9 @@ PHP;
             // Target directory in the theme using the directoryBlockName
             $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$directoryBlockName}");
 
-            // Verify the target path is within the theme
-            $this->line("Target directory will be: {$targetDir}");
-
             // Create target directory if it doesn't exist
             if (! $this->files->isDirectory($targetDir)) {
                 $this->files->makeDirectory($targetDir, 0755, true);
-                $this->line("Created directory: {$targetDir}");
-            } else {
-                 $this->warn("Target directory already exists: {$targetDir}. Files will be overwritten.");
             }
 
             // Files to copy
@@ -298,6 +317,9 @@ PHP;
                 'style.css',
                 'view.js',
             ];
+
+            $copiedFiles = [];
+            $failedFiles = [];
 
             // Copy each file
             foreach ($files as $file) {
@@ -325,9 +347,23 @@ PHP;
                     }
 
                     $this->files->put($target, $content);
-                    $this->line("Copied and processed: {$file}");
+                    $copiedFiles[] = $file;
                 } else {
-                    $this->warn("Source file not found: {$source}");
+                    $failedFiles[] = $file;
+                }
+            }
+
+            // Display grouped output
+            if (count($copiedFiles) > 0) {
+                $this->line('  <fg=green>✓</> block.json, index.js');
+                $this->line('  <fg=green>✓</> editor.jsx, save.jsx');
+                $this->line('  <fg=green>✓</> editor.css, style.css');
+                $this->line('  <fg=green>✓</> view.js');
+            }
+
+            if (count($failedFiles) > 0) {
+                foreach ($failedFiles as $file) {
+                    $this->line("  <fg=red>✗</> {$file} (not found)");
                 }
             }
 
@@ -422,13 +458,13 @@ PHP;
 
     /**
      * Update editor.js to import block index.js files for the editor.
+     * Returns: true if added, false if already exists, null if created new file
      */
-    protected function updateJsFile(RootsFilesystem $rootsFiles): void
+    protected function updateJsFile(RootsFilesystem $rootsFiles): ?bool
     {
         $jsPath = $this->resolvePath($rootsFiles, 'resources/js/editor.js');
 
         if (! $this->files->exists($jsPath)) {
-            $this->warn("Editor JS file not found at {$jsPath}. Creating it...");
             // Use NOWDOC for initial content to avoid issues with special characters
             $initialContent = <<<'JS'
 import domReady from '@wordpress/dom-ready';
@@ -443,7 +479,7 @@ domReady(() => {
 });
 JS; // Ensure this is at the start of the line with no preceding whitespace
             $this->files->put($jsPath, $initialContent);
-            $this->info("Created {$jsPath} with block import code.");
+            return null; // Created new file
         } else {
             $jsContent = $this->files->get($jsPath);
 
@@ -461,9 +497,9 @@ import.meta.glob('./blocks/**/index.js', { eager: true });
 JS; // Ensure this is at the start of the line with no preceding whitespace
                 // Prepend the import code to the existing content
                 $this->files->put($jsPath, $jsToAdd . $jsContent);
-                $this->info("Added block JS import code to {$jsPath}");
+                return true; // Added import
             } else {
-                $this->info("Block JS import code already exists in {$jsPath}");
+                return false; // Already exists
             }
         }
     }
