@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Command renamed** - `sage-native-block:add-setup` is now `sage-native-block:create`
   - More intuitive naming that better reflects the command's purpose
-  - Existing automation scripts will need to update the command name
+  - Old command still works with deprecation warning for backward compatibility
+  - Please update scripts to use the new command name
 
 ### Added
 
@@ -36,12 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Migration Guide
 
-If you have scripts using the old command:
+The old command still works but shows a deprecation warning:
 ```shell
-# Old (v1.x)
+# Old command (deprecated but still works)
 wp acorn sage-native-block:add-setup my-block --template=cta --force
+# Shows: ⚠️ DEPRECATION WARNING - Please use sage-native-block:create instead
 
-# New (v2.x)
+# New command (recommended)
 wp acorn sage-native-block:create my-block --template=cta --force
 ```
 
