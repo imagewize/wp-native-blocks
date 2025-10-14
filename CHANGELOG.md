@@ -28,27 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Block name only: Prompts for template selection
   - All arguments: Non-interactive automation mode
 
-### Improved
-
-- Better onboarding experience for new users
-- Clearer command description emphasizing interactive workflow
-- Updated documentation showcasing interactive-first approach
-- Maintained backward compatibility for automation via CLI arguments
-
-### Migration Guide
-
-The old command still works but shows a deprecation warning:
-```shell
-# Old command (deprecated but still works)
-wp acorn sage-native-block:add-setup my-block --template=cta --force
-# Shows: ⚠️ DEPRECATION WARNING - Please use sage-native-block:create instead
-
-# New command (recommended)
-wp acorn sage-native-block:create my-block --template=cta --force
-```
-
-## [1.1.1] - 2025-10-14
-
 ### Changed
 
 - **Improved Command Output** - Redesigned terminal UI for better readability and user experience
@@ -64,10 +43,26 @@ wp acorn sage-native-block:create my-block --template=cta --force
 
 ### Improved
 
+- Better onboarding experience for new users
+- Clearer command description emphasizing interactive workflow
+- Updated documentation showcasing interactive-first approach
+- Maintained backward compatibility for automation via CLI arguments
 - Command output is now ~80% less verbose while maintaining all necessary information
 - Better visual hierarchy makes it easier to scan command progress at a glance
 - Consistent styling whether setup already exists or is being created fresh
 - Professional, modern terminal UI that matches industry standards for CLI tools
+
+### Migration Guide
+
+The old command still works but shows a deprecation warning:
+```shell
+# Old command (deprecated but still works)
+wp acorn sage-native-block:add-setup my-block --template=cta --force
+# Shows: ⚠️ DEPRECATION WARNING - Please use sage-native-block:create instead
+
+# New command (recommended)
+wp acorn sage-native-block:create my-block --template=cta --force
+```
 
 ## [1.1.0] - 2025-10-14
 
@@ -155,8 +150,7 @@ wp acorn sage-native-block:create my-block --template=cta --force
 - Feature overview and examples
 
 [Unreleased]: https://github.com/imagewize/sage-native-block/compare/v2.0.0...HEAD
-[2.0.0]: https://github.com/imagewize/sage-native-block/compare/v1.1.1...v2.0.0
-[1.1.1]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...v1.1.1
+[2.0.0]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/imagewize/sage-native-block/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/imagewize/sage-native-block/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/imagewize/sage-native-block/compare/v1.0.0...v1.0.1
