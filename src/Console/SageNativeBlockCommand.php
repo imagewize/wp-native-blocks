@@ -7,28 +7,21 @@ use Roots\Acorn\Console\Commands\Command;
 use Roots\Acorn\Filesystem\Filesystem as RootsFilesystem;
 
 /**
- * Command to add native block registration code to the Sage theme setup file and create block files.
+ * Interactive command to create native Gutenberg blocks for your Sage theme.
  *
- * Run this command from your WordPress site root or theme directory:
- * $ wp acorn sage-native-block:add-setup
+ * Interactive mode (recommended):
+ * $ wp acorn sage-native-block:create
+ *   - Prompts for block name with vendor prefix
+ *   - Prompts to select from available templates
+ *   - Shows summary and asks for confirmation
  *
- * To create a block with a custom name (e.g., 'cool-block'):
- * $ wp acorn sage-native-block:add-setup cool-block
- *   (This will create a block named 'vendor/cool-block')
+ * Non-interactive mode (for automation):
+ * $ wp acorn sage-native-block:create my-block --template=statistics --force
  *
- * To create a block with a specific vendor prefix (e.g., 'imagewize/my-cool-block'):
- * $ wp acorn sage-native-block:add-setup imagewize/my-cool-block
- *
- * This will create block files in resources/js/blocks/<block-name-without-vendor>/
+ * This will create block files in resources/js/blocks/<block-name>/
  * The block.json 'name' will always include a vendor prefix (e.g., 'vendor/cool-block' or 'imagewize/my-cool-block').
  * The block.json 'textdomain' will be set to the vendor ('vendor' or 'imagewize').
  * The default CSS class will be 'wp-block-vendor-cool-block' or 'wp-block-imagewize-my-cool-block'.
- *
- * To skip confirmation prompt:
- * $ wp acorn sage-native-block:add-setup --force
- *
- * You can combine parameters:
- * $ wp acorn sage-native-block:add-setup imagewize/my-cool-block --force
  */
 class SageNativeBlockCommand extends Command
 {
@@ -37,17 +30,17 @@ class SageNativeBlockCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'sage-native-block:add-setup
-                            {blockName? : The name of the block (e.g., "my-block" or "vendor/my-block"), defaults to example-block}
+    protected $signature = 'sage-native-block:create
+                            {blockName? : The name of the block (e.g., "my-block" or "vendor/my-block")}
                             {--template= : Block template type (basic, innerblocks, two-column, statistics, cta)}
-                            {--force : Force the operation to run without confirmation}';
+                            {--force : Skip all confirmation prompts}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Add native block registration code to app/setup.php.';
+    protected $description = 'Interactively create a new native Gutenberg block for your Sage theme.';
 
     /**
      * The filesystem instance.
@@ -112,19 +105,51 @@ class SageNativeBlockCommand extends Command
      */
     public function handle(RootsFilesystem $rootsFiles): int
     {
-        // Get block name from argument or use default
-        $blockNameInput = $this->argument('blockName') ?: 'example-block';
+        // Interactive mode: prompt for block name if not provided
+        $blockNameInput = $this->argument('blockName');
+
+        if (!$blockNameInput) {
+            $this->newLine();
+            $this->line('<fg=cyan>Welcome to Sage Native Block Creator!</>');
+            $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            $this->newLine();
+
+            $blockNameInput = $this->ask('What is the block name? (e.g., "my-block" or "vendor/my-block")');
+
+            if (empty($blockNameInput)) {
+                $this->error('Block name is required.');
+                return static::FAILURE;
+            }
+        }
 
         // Ensure block name always has a vendor prefix
         if (!str_contains($blockNameInput, '/')) {
-            $fullBlockName = 'vendor/' . $blockNameInput;
-            $this->info("No vendor prefix provided. Using default: '{$fullBlockName}'");
+            $defaultVendor = 'vendor';
+
+            // Only prompt for vendor if in interactive mode
+            if (!$this->argument('blockName')) {
+                $vendor = $this->ask("Enter vendor prefix (leave empty for '{$defaultVendor}')");
+                $vendor = !empty($vendor) ? $vendor : $defaultVendor;
+            } else {
+                $vendor = $defaultVendor;
+                $this->comment("No vendor prefix provided. Using default: '{$vendor}'");
+            }
+
+            $fullBlockName = $vendor . '/' . $blockNameInput;
         } else {
             $fullBlockName = $blockNameInput;
         }
 
-        // Get template from option or prompt user
-        $template = $this->option('template') ?? $this->promptForTemplate();
+        // Get template from option or prompt user with two-step selection
+        if ($this->option('template')) {
+            $template = $this->option('template');
+        } else {
+            // Step 1: Select category
+            $category = $this->promptForTemplateCategory();
+
+            // Step 2: Select template within category
+            $template = $this->promptForTemplate($category);
+        }
 
         // Validate template exists
         if (!$this->isValidTemplate($template)) {
@@ -132,12 +157,26 @@ class SageNativeBlockCommand extends Command
             return static::FAILURE;
         }
 
-        $this->info("Using template: {$template}");
+        // Get template display name
+        $templateConfig = config('sage-native-block.templates')[$template] ?? [];
+        $templateName = $templateConfig['name'] ?? $template;
+
+        // Extract the base name for directory structure
+        $directoryBlockName = $this->getDirectoryBlockName($fullBlockName);
+
+        // Display header
+        $this->newLine();
+        $this->line("🔨 Creating block: <fg=cyan>{$fullBlockName}</>");
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->newLine();
+        $this->line("  Template:  <fg=yellow>{$templateName}</>");
+        $this->line("  Location:  <fg=green>resources/js/blocks/{$directoryBlockName}</>");
+        $this->newLine();
 
         $setupPath = $this->resolvePath($rootsFiles, 'app/setup.php');
 
         if (! $this->files->exists($setupPath)) {
-            $this->error("Error: Theme setup file not found at {$setupPath}.");
+            $this->error("Error: Theme setup file not found at app/setup.php");
 
             return static::FAILURE;
         }
@@ -145,58 +184,69 @@ class SageNativeBlockCommand extends Command
         $currentContent = $this->files->get($setupPath);
 
         // Check if the code is already present
-        if (str_contains($currentContent, 'register_block_type($block_json_path);')) {
-            $this->info("Block registration code already exists in {$setupPath}.");
-        }
+        $setupExists = str_contains($currentContent, 'register_block_type($block_json_path);');
 
         // Confirm action unless forced
-        if (! $this->option('force') && ! $this->confirm("This will modify {$setupPath} (if needed) and copy block templates for '{$fullBlockName}'. Do you wish to continue?")) {
+        if (! $this->option('force') && ! $this->confirm('Continue?')) {
             $this->line('Operation cancelled.');
 
             return static::SUCCESS;
         }
 
+        $this->newLine();
+        $this->line('<fg=yellow>Setup:</>');
+
         // Create a backup of the setup file only if we are modifying it
         $backupPath = null;
-        if (!str_contains($currentContent, 'register_block_type($block_json_path);')) {
-            $backupPath = $setupPath.'.backup-'.date('Y-m-d-His');
-            $this->files->copy($setupPath, $backupPath);
-            $this->line("Created backup at {$backupPath}");
-        }
-
-        // Extract the base name for directory structure
-        $directoryBlockName = $this->getDirectoryBlockName($fullBlockName);
         $codeToAdd = $this->getBlockRegistrationCode();
 
         try {
             // Append the code to the file only if it's not already there
-            if (!str_contains($currentContent, 'register_block_type($block_json_path);')) {
+            if (!$setupExists) {
+                $backupPath = $setupPath.'.backup-'.date('Y-m-d-His');
+                $this->files->copy($setupPath, $backupPath);
+
                 if ($this->files->append($setupPath, $codeToAdd)) {
-                    $this->info("Successfully added block registration code to {$setupPath}.");
+                    $this->line('  <fg=green>✓</> Block registration added');
                 } else {
-                    $this->error("Failed to write to {$setupPath}. Reverting to backup...");
+                    $this->error('  ✗ Failed to update app/setup.php');
                     if ($backupPath) {
                         $this->files->copy($backupPath, $setupPath);
                     }
                     return static::FAILURE;
                 }
+            } else {
+                $this->line('  <fg=green>✓</> Block registration configured');
             }
 
+            // Update JS file to include block assets
+            $editorJsUpdated = $this->updateJsFile($rootsFiles);
+            if ($editorJsUpdated === true) {
+                $this->line('  <fg=green>✓</> Editor imports added');
+            } elseif ($editorJsUpdated === false) {
+                $this->line('  <fg=green>✓</> Editor imports configured');
+            }
+
+            $this->newLine();
+            $this->line('<fg=yellow>Files:</>');
+
             // Copy block template files using the full name for replacements and directory name for path
-            if ($this->copyBlockStubs($rootsFiles, $fullBlockName, $directoryBlockName, $template)) {
-                $this->info("Successfully copied block template files to theme resources directory.");
-            } else {
+            $filesCopied = $this->copyBlockStubs($rootsFiles, $fullBlockName, $directoryBlockName, $template);
+
+            if (!$filesCopied) {
                  // If copying fails, potentially revert setup.php if it was modified in this run
                  if ($backupPath && $this->files->exists($backupPath)) {
-                    $this->warn('Restoring setup.php from backup due to error during stub copying...');
+                    $this->error('  ✗ Failed to copy files. Reverting changes...');
                     $this->files->copy($backupPath, $setupPath);
-                    $this->info('Backup restored.');
                 }
                 return static::FAILURE;
             }
-            
-            // Update JS file to include block assets
-            $this->updateJsFile($rootsFiles);
+
+            // Final success message
+            $this->newLine();
+            $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            $this->line("<fg=green>✓ Success!</> Block ready at <fg=green>resources/js/blocks/{$directoryBlockName}</>");
+            $this->newLine();
 
             return static::SUCCESS;
 
@@ -264,28 +314,34 @@ PHP;
     /**
      * Copy block stub files to the theme's resources directory.
      * Uses directoryBlockName for the target path and fullBlockName for replacements.
+     * Checks theme's block-templates directory first, then package's stubs directory.
      */
     protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $fullBlockName, string $directoryBlockName, string $template): bool
     {
         try {
-            // Get stub path from config
+            // Get stub path from config or theme templates
             $stubPath = $this->getStubPath($template);
 
-            // Source stub directory
-            $stubsDir = dirname(__DIR__, 2).'/stubs/'.$stubPath;
+            // Check if this is a theme template (from block-templates/)
+            if ($this->isThemeTemplate($template)) {
+                $stubsDir = get_template_directory() . '/block-templates/' . $stubPath;
+            } else {
+                // Package template - use stubs directory
+                $stubsDir = dirname(__DIR__, 2) . '/stubs/' . $stubPath;
+            }
+
+            // Validate the directory exists
+            if (!$this->files->isDirectory($stubsDir)) {
+                $this->error("Template directory not found: {$stubsDir}");
+                return false;
+            }
 
             // Target directory in the theme using the directoryBlockName
             $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$directoryBlockName}");
 
-            // Verify the target path is within the theme
-            $this->line("Target directory will be: {$targetDir}");
-
             // Create target directory if it doesn't exist
             if (! $this->files->isDirectory($targetDir)) {
                 $this->files->makeDirectory($targetDir, 0755, true);
-                $this->line("Created directory: {$targetDir}");
-            } else {
-                 $this->warn("Target directory already exists: {$targetDir}. Files will be overwritten.");
             }
 
             // Files to copy
@@ -298,6 +354,9 @@ PHP;
                 'style.css',
                 'view.js',
             ];
+
+            $copiedFiles = [];
+            $failedFiles = [];
 
             // Copy each file
             foreach ($files as $file) {
@@ -325,9 +384,23 @@ PHP;
                     }
 
                     $this->files->put($target, $content);
-                    $this->line("Copied and processed: {$file}");
+                    $copiedFiles[] = $file;
                 } else {
-                    $this->warn("Source file not found: {$source}");
+                    $failedFiles[] = $file;
+                }
+            }
+
+            // Display grouped output
+            if (count($copiedFiles) > 0) {
+                $this->line('  <fg=green>✓</> block.json, index.js');
+                $this->line('  <fg=green>✓</> editor.jsx, save.jsx');
+                $this->line('  <fg=green>✓</> editor.css, style.css');
+                $this->line('  <fg=green>✓</> view.js');
+            }
+
+            if (count($failedFiles) > 0) {
+                foreach ($failedFiles as $file) {
+                    $this->line("  <fg=red>✗</> {$file} (not found)");
                 }
             }
 
@@ -422,13 +495,13 @@ PHP;
 
     /**
      * Update editor.js to import block index.js files for the editor.
+     * Returns: true if added, false if already exists, null if created new file
      */
-    protected function updateJsFile(RootsFilesystem $rootsFiles): void
+    protected function updateJsFile(RootsFilesystem $rootsFiles): ?bool
     {
         $jsPath = $this->resolvePath($rootsFiles, 'resources/js/editor.js');
 
         if (! $this->files->exists($jsPath)) {
-            $this->warn("Editor JS file not found at {$jsPath}. Creating it...");
             // Use NOWDOC for initial content to avoid issues with special characters
             $initialContent = <<<'JS'
 import domReady from '@wordpress/dom-ready';
@@ -443,7 +516,7 @@ domReady(() => {
 });
 JS; // Ensure this is at the start of the line with no preceding whitespace
             $this->files->put($jsPath, $initialContent);
-            $this->info("Created {$jsPath} with block import code.");
+            return null; // Created new file
         } else {
             $jsContent = $this->files->get($jsPath);
 
@@ -461,29 +534,200 @@ import.meta.glob('./blocks/**/index.js', { eager: true });
 JS; // Ensure this is at the start of the line with no preceding whitespace
                 // Prepend the import code to the existing content
                 $this->files->put($jsPath, $jsToAdd . $jsContent);
-                $this->info("Added block JS import code to {$jsPath}");
+                return true; // Added import
             } else {
-                $this->info("Block JS import code already exists in {$jsPath}");
+                return false; // Already exists
             }
         }
     }
 
     /**
-     * Prompt user to select a template interactively.
+     * Get available template categories dynamically.
+     * Returns categories from config templates plus auto-detected theme templates.
+     *
+     * Scans the theme's block-templates/ directory for custom templates.
+     * Package templates must be explicitly defined in config.
      */
-    protected function promptForTemplate(): string
+    protected function getAvailableCategories(): array
     {
-        $templates = config('sage-native-block.templates', []);
+        $categories = [
+            'basic' => 'Basic Block - Default simple block',
+            'generic' => 'Generic Templates - Universal, theme-agnostic templates',
+        ];
 
-        if (empty($templates)) {
-            $this->warn('No templates found in configuration. Using default.');
+        $categoryNames = [];
+
+        // Get categories from config (for package-provided themes like Nynaeve)
+        $templates = config('sage-native-block.templates', []);
+        foreach ($templates as $template) {
+            if (isset($template['category']) &&
+                !in_array($template['category'], ['basic', 'generic'])) {
+                $categoryNames[$template['category']] = true;
+            }
+        }
+
+        // Auto-detect custom templates from the Sage theme's block-templates/ directory
+        $themeTemplates = $this->getThemeTemplates();
+        foreach ($themeTemplates as $templateData) {
+            $category = $templateData['category'] ?? 'custom';
+            if (!in_array($category, ['basic', 'generic'])) {
+                $categoryNames[$category] = true;
+            }
+        }
+
+        // Create categories for all unique category names
+        foreach (array_keys($categoryNames) as $categoryName) {
+            // Capitalize category name for display
+            $displayName = ucfirst($categoryName);
+            $categories[$categoryName] = "{$displayName} Theme - Production templates from {$displayName} theme";
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Get all available templates from theme's block-templates/ directory.
+     * Returns array of template data including metadata.
+     */
+    protected function getThemeTemplates(): array
+    {
+        $themeTemplates = [];
+        $blockTemplatesDir = get_template_directory() . '/block-templates';
+
+        if (!$this->files->isDirectory($blockTemplatesDir)) {
+            return $themeTemplates;
+        }
+
+        $templateFolders = $this->files->directories($blockTemplatesDir);
+
+        foreach ($templateFolders as $templateFolder) {
+            $templateName = basename($templateFolder);
+            $blockJsonPath = $templateFolder . '/block.json';
+
+            // Only include if block.json exists
+            if (!$this->files->exists($blockJsonPath)) {
+                continue;
+            }
+
+            // Try to load metadata
+            $metadata = $this->loadTemplateMetadata($templateFolder);
+
+            $themeTemplates[$templateName] = [
+                'name' => $metadata['name'] ?? $this->humanizeTemplateName($templateName),
+                'description' => $metadata['description'] ?? 'Custom template',
+                'category' => $metadata['category'] ?? 'custom',
+                'stub_path' => $templateName, // Direct folder name
+                'is_theme_template' => true,
+            ];
+        }
+
+        return $themeTemplates;
+    }
+
+    /**
+     * Load template metadata from template-meta.json if it exists.
+     */
+    protected function loadTemplateMetadata(string $templateFolder): array
+    {
+        $metadataPath = $templateFolder . '/template-meta.json';
+
+        if (!$this->files->exists($metadataPath)) {
+            return [];
+        }
+
+        try {
+            $content = $this->files->get($metadataPath);
+            $metadata = json_decode($content, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->warn("Invalid JSON in {$metadataPath}. Using defaults.");
+                return [];
+            }
+
+            return $metadata;
+        } catch (\Exception $e) {
+            $this->warn("Could not read {$metadataPath}. Using defaults.");
+            return [];
+        }
+    }
+
+    /**
+     * Convert template folder name to human-readable format.
+     * Example: "my-hero-section" -> "My Hero Section"
+     */
+    protected function humanizeTemplateName(string $name): string
+    {
+        $words = explode('-', $name);
+        $words = array_map('ucfirst', $words);
+        return implode(' ', $words);
+    }
+
+    /**
+     * Prompt user to select a template category interactively.
+     */
+    protected function promptForTemplateCategory(): string
+    {
+        $categories = $this->getAvailableCategories();
+
+        if (empty($categories)) {
+            $this->warn('No template categories found. Using basic.');
+            return 'basic';
+        }
+
+        $choices = array_values($categories);
+        $keys = array_keys($categories);
+
+        $selection = $this->choice('Which template category would you like to use?', $choices, 0);
+
+        // Find the index of the selected choice
+        $selectedIndex = array_search($selection, $choices);
+
+        return $keys[$selectedIndex];
+    }
+
+    /**
+     * Prompt user to select a template interactively.
+     * Optionally filter by category.
+     * Merges package templates with theme templates.
+     */
+    protected function promptForTemplate(?string $category = null): string
+    {
+        // Get package templates from config
+        $packageTemplates = config('sage-native-block.templates', []);
+
+        // Get theme templates
+        $themeTemplates = $this->getThemeTemplates();
+
+        // Merge templates (theme templates override package templates with same key)
+        $allTemplates = array_merge($packageTemplates, $themeTemplates);
+
+        if (empty($allTemplates)) {
+            $this->warn('No templates found. Using default.');
             return config('sage-native-block.default_template', 'basic');
+        }
+
+        // Filter templates by category if provided
+        if ($category !== null) {
+            $allTemplates = array_filter($allTemplates, function ($template) use ($category) {
+                return isset($template['category']) && $template['category'] === $category;
+            });
+        }
+
+        if (empty($allTemplates)) {
+            $this->warn("No templates found for category '{$category}'. Using default.");
+            return config('sage-native-block.default_template', 'basic');
+        }
+
+        // For 'basic' category, just return the basic template directly
+        if ($category === 'basic') {
+            return 'basic';
         }
 
         $choices = [];
         $keys = [];
-        foreach ($templates as $key => $template) {
-            $choices[] = "{$template['name']} - {$template['description']}";
+        foreach ($allTemplates as $key => $template) {
+            $source = isset($template['is_theme_template']) ? ' (Custom)' : '';
+            $choices[] = "{$template['name']}{$source} - {$template['description']}";
             $keys[] = $key;
         }
 
@@ -501,25 +745,53 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
     }
 
     /**
-     * Validate if a template exists in the configuration.
+     * Validate if a template exists in configuration or theme templates.
      */
     protected function isValidTemplate(string $template): bool
     {
-        $templates = config('sage-native-block.templates', []);
-        return isset($templates[$template]);
+        // Check package templates
+        $packageTemplates = config('sage-native-block.templates', []);
+        if (isset($packageTemplates[$template])) {
+            return true;
+        }
+
+        // Check theme templates
+        $themeTemplates = $this->getThemeTemplates();
+        if (isset($themeTemplates[$template])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
      * Get the stub path for a given template.
+     * Checks theme templates first, then falls back to package templates.
      */
     protected function getStubPath(string $template): string
     {
-        $templates = config('sage-native-block.templates', []);
-
-        if (!isset($templates[$template])) {
-            return 'block'; // Fallback to default
+        // Check theme templates first (priority)
+        $themeTemplates = $this->getThemeTemplates();
+        if (isset($themeTemplates[$template])) {
+            return $themeTemplates[$template]['stub_path'];
         }
 
-        return $templates[$template]['stub_path'] ?? 'block';
+        // Fall back to package templates
+        $packageTemplates = config('sage-native-block.templates', []);
+        if (isset($packageTemplates[$template])) {
+            return $packageTemplates[$template]['stub_path'] ?? 'block';
+        }
+
+        // Final fallback
+        return 'block';
+    }
+
+    /**
+     * Check if a template is from the theme (not package).
+     */
+    protected function isThemeTemplate(string $template): bool
+    {
+        $themeTemplates = $this->getThemeTemplates();
+        return isset($themeTemplates[$template]);
     }
 }

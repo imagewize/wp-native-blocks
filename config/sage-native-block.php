@@ -29,52 +29,61 @@ return [
             'name' => 'Basic Block',
             'description' => 'Simple block with InnerBlocks support',
             'stub_path' => 'block',
+            'category' => 'basic',
         ],
 
         // Generic Templates - Minimal styling, universal compatibility
         'innerblocks' => [
-            'name' => 'InnerBlocks Container (Generic)',
+            'name' => 'InnerBlocks Container',
             'description' => 'Minimal container with heading and content',
             'stub_path' => 'generic/innerblocks',
+            'category' => 'generic',
         ],
         'two-column' => [
-            'name' => 'Two Column Layout (Generic)',
+            'name' => 'Two Column Layout',
             'description' => 'Basic two-column layout structure',
             'stub_path' => 'generic/two-column',
+            'category' => 'generic',
         ],
         'statistics' => [
-            'name' => 'Statistics Section (Generic)',
+            'name' => 'Statistics Section',
             'description' => 'Simple statistics layout',
             'stub_path' => 'generic/statistics',
+            'category' => 'generic',
         ],
         'cta' => [
-            'name' => 'Call-to-Action (Generic)',
+            'name' => 'Call-to-Action',
             'description' => 'Basic CTA with button',
             'stub_path' => 'generic/cta',
+            'category' => 'generic',
         ],
 
         // Nynaeve Theme Templates (by Imagewize)
         // Based on production Nynaeve theme - requires specific theme.json setup
         // See: stubs/themes/nynaeve/README.md for requirements
         'nynaeve-innerblocks' => [
-            'name' => 'InnerBlocks (Nynaeve Theme)',
+            'name' => 'InnerBlocks',
             'description' => 'From Nynaeve theme - montserrat, open-sans fonts',
             'stub_path' => 'themes/nynaeve/innerblocks',
+            'category' => 'nynaeve',
         ],
         'nynaeve-two-column' => [
-            'name' => 'Two Column (Nynaeve Theme)',
+            'name' => 'Two Column',
             'description' => 'Card-style layout from Nynaeve theme',
             'stub_path' => 'themes/nynaeve/two-column',
+            'category' => 'nynaeve',
         ],
         'nynaeve-statistics' => [
-            'name' => 'Statistics (Nynaeve Theme)',
+            'name' => 'Statistics',
             'description' => 'Full statistics section from Nynaeve theme',
             'stub_path' => 'themes/nynaeve/statistics',
+            'category' => 'nynaeve',
         ],
         'nynaeve-cta' => [
-            'name' => 'CTA (Nynaeve Theme)',
+            'name' => 'CTA',
             'description' => 'Styled call-to-action from Nynaeve theme',
             'stub_path' => 'themes/nynaeve/cta',
+            'category' => 'nynaeve',
         ],
     ],
 

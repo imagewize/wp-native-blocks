@@ -1,7 +1,7 @@
 {
   "name": "imagewize/sage-native-block",
   "type": "package",
-  "description": "Native block setups made easier for Sage",
+  "description": "Interactive native block scaffolding for Sage themes with multiple templates",
   "license": "MIT",
   "authors": [
     {

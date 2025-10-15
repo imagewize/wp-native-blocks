@@ -4,6 +4,7 @@ namespace Imagewize\SageNativeBlockPackage\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Imagewize\SageNativeBlockPackage\Console\SageNativeBlockCommand;
+use Imagewize\SageNativeBlockPackage\Console\SageNativeBlockAddSetupCommand;
 
 class SageNativeBlockServiceProvider extends ServiceProvider
 {
@@ -33,6 +34,7 @@ class SageNativeBlockServiceProvider extends ServiceProvider
 
         $this->commands([
             SageNativeBlockCommand::class,
+            SageNativeBlockAddSetupCommand::class,
         ]);
     }
 }
