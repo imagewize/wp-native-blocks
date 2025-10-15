@@ -4,7 +4,9 @@ This package helps you create and manage native Gutenberg blocks in your [Sage](
 
 ## Features
 
+- **Hierarchical Template Selection** - Organized two-step selection process with template categories
 - **Multiple Block Templates** - Choose from pre-configured templates for common block patterns
+- **Dynamic Theme Detection** - Automatically discovers and displays theme-specific templates
 - Scaffolds a complete native block structure in your Sage theme
 - Automatically adds block registration code to your theme's setup file
 - Creates all necessary block files (JS, JSX, CSS) with proper configuration
@@ -47,8 +49,9 @@ wp acorn sage-native-block:create
 You'll be guided through an interactive setup:
 1. **Block name**: Enter your block name (e.g., "my-stats")
 2. **Vendor prefix**: Optionally specify a vendor (defaults to "vendor")
-3. **Template selection**: Choose from available block templates
-4. **Confirmation**: Review and confirm your choices
+3. **Template category**: Choose between Basic Block, Generic Templates, or Theme-specific templates
+4. **Template selection**: Choose a specific template within your selected category
+5. **Confirmation**: Review and confirm your choices
 
 The command will then:
 - Create the block in your theme's `resources/js/blocks` directory
@@ -99,7 +102,19 @@ Files:
 
 ### Block Templates
 
-The package includes templates in two categories:
+The package provides an organized, hierarchical template selection system. When creating a block interactively, you'll first choose a **template category**, then select a specific template within that category.
+
+#### Template Categories
+
+The command automatically presents available categories:
+
+1. **Basic Block** - Default simple block (selected directly, no sub-options)
+2. **Generic Templates** - Universal, theme-agnostic templates that work everywhere
+3. **Theme Templates** - Production-ready templates from specific themes (auto-detected from `stubs/themes/`)
+
+> 💡 **Dynamic Detection**: Any theme folder you add to `stubs/themes/your-theme-name/` will automatically appear as a new category option!
+
+The package includes templates in these categories:
 
 #### 🟢 Generic Templates (Recommended)
 Universal templates that work with ANY theme - no dependencies required:
@@ -138,7 +153,7 @@ Real-world examples from production themes. Currently featuring templates from t
 wp acorn sage-native-block:create
 ```
 
-**With block name (still prompts for template):**
+**With block name (prompts for category and template):**
 ```shell
 wp acorn sage-native-block:create my-stats
 ```
@@ -210,6 +225,26 @@ Want to create your own block templates? See the [Developer Documentation](docs/
 - Registration process
 - Best practices
 
+### Adding Your Own Theme Templates
+
+Want to add templates from your own theme? The package includes dynamic theme detection:
+
+1. **Create theme folder**: Add `stubs/themes/your-theme-name/` with your template folders
+2. **Update config**: Add templates to `config/sage-native-block.php` with `'category' => 'your-theme-name'`
+3. **Done!** Your theme will automatically appear as a category option
+
+Example config entry:
+```php
+'your-theme-cta' => [
+    'name' => 'Call-to-Action',
+    'description' => 'Styled CTA from Your Theme',
+    'stub_path' => 'themes/your-theme-name/cta',
+    'category' => 'your-theme-name',
+],
+```
+
+The command will automatically detect your theme folder and display "Your-theme-name Theme" as a selectable category!
+
 ### Contributing Templates
 
 Have templates from your production theme? We welcome community contributions! Check the [Theme Templates Guide](stubs/themes/README.md) for guidelines on contributing theme-specific templates.
@@ -217,6 +252,8 @@ Have templates from your production theme? We welcome community contributions! C
 ## Benefits of Using Templates
 
 - **80% faster development** - Start with pre-configured templates instead of building from scratch
+- **Organized selection** - Hierarchical categories make finding the right template easy
+- **Extensible system** - Add your own theme templates with automatic detection
 - **Consistent patterns** - All blocks follow established structure and best practices
 - **Theme integration** - Templates use theme.json values for typography and colors
 - **Proper InnerBlocks setup** - Avoid common mistakes with InnerBlocks configuration

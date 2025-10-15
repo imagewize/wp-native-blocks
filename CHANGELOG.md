@@ -51,6 +51,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better visual hierarchy makes it easier to scan command progress at a glance
 - Consistent styling whether setup already exists or is being created fresh
 - Professional, modern terminal UI that matches industry standards for CLI tools
+- **Hierarchical Template Selection** - Two-step template selection process for better organization
+  - Step 1: Choose template category (Basic Block, Generic Templates, or Theme-specific templates)
+  - Step 2: Select specific template within chosen category
+  - Improved user experience with logical grouping of related templates
+  - Categories are presented with clear descriptions to guide selection
+- **Dynamic Theme Detection** - Template categories now automatically detect themes
+  - System scans `stubs/themes/` directory for available theme folders
+  - Any new theme added to `stubs/themes/` automatically appears as a category option
+  - No code changes needed to add new theme template categories
+  - Theme names are automatically formatted for display (e.g., "Nynaeve Theme - Production templates from Nynaeve theme")
+- **Template Configuration** - Added `category` field to all template definitions
+  - Templates now organized by category: `basic`, `generic`, or theme name
+  - Simplified template names as they're now grouped by category
+  - Example: "InnerBlocks Container (Generic)" is now just "InnerBlocks Container" under Generic Templates
+- **Interactive Flow Enhancement** - Basic block selection is now streamlined
+  - Selecting "Basic Block" category immediately uses the basic template without additional prompts
+  - Generic and theme categories show template options for user selection
+- **Developer Notes** - To add a new theme's templates: Create folder `stubs/themes/your-theme-name/` and add templates to config with `'category' => 'your-theme-name'`
+  - The system will automatically detect and display the new theme category
+  - Non-interactive mode with `--template` flag continues to work as before for automation
 
 ### Migration Guide
 

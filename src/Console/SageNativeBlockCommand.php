@@ -140,8 +140,16 @@ class SageNativeBlockCommand extends Command
             $fullBlockName = $blockNameInput;
         }
 
-        // Get template from option or prompt user
-        $template = $this->option('template') ?? $this->promptForTemplate();
+        // Get template from option or prompt user with two-step selection
+        if ($this->option('template')) {
+            $template = $this->option('template');
+        } else {
+            // Step 1: Select category
+            $category = $this->promptForTemplateCategory();
+
+            // Step 2: Select template within category
+            $template = $this->promptForTemplate($category);
+        }
 
         // Validate template exists
         if (!$this->isValidTemplate($template)) {
@@ -522,15 +530,84 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
     }
 
     /**
-     * Prompt user to select a template interactively.
+     * Get available template categories dynamically.
+     * Returns categories from config templates plus any theme folders found in stubs/themes/
      */
-    protected function promptForTemplate(): string
+    protected function getAvailableCategories(): array
+    {
+        $categories = [
+            'basic' => 'Basic Block - Default simple block',
+            'generic' => 'Generic Templates - Universal, theme-agnostic templates',
+        ];
+
+        // Scan stubs/themes/ directory for theme folders
+        $themesDir = dirname(__DIR__, 2) . '/stubs/themes';
+
+        if ($this->files->isDirectory($themesDir)) {
+            $themeFolders = $this->files->directories($themesDir);
+
+            foreach ($themeFolders as $themeFolder) {
+                $themeName = basename($themeFolder);
+                // Capitalize theme name for display
+                $displayName = ucfirst($themeName);
+                $categories[$themeName] = "{$displayName} Theme - Production templates from {$displayName} theme";
+            }
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Prompt user to select a template category interactively.
+     */
+    protected function promptForTemplateCategory(): string
+    {
+        $categories = $this->getAvailableCategories();
+
+        if (empty($categories)) {
+            $this->warn('No template categories found. Using basic.');
+            return 'basic';
+        }
+
+        $choices = array_values($categories);
+        $keys = array_keys($categories);
+
+        $selection = $this->choice('Which template category would you like to use?', $choices, 0);
+
+        // Find the index of the selected choice
+        $selectedIndex = array_search($selection, $choices);
+
+        return $keys[$selectedIndex];
+    }
+
+    /**
+     * Prompt user to select a template interactively.
+     * Optionally filter by category.
+     */
+    protected function promptForTemplate(?string $category = null): string
     {
         $templates = config('sage-native-block.templates', []);
 
         if (empty($templates)) {
             $this->warn('No templates found in configuration. Using default.');
             return config('sage-native-block.default_template', 'basic');
+        }
+
+        // Filter templates by category if provided
+        if ($category !== null) {
+            $templates = array_filter($templates, function ($template) use ($category) {
+                return isset($template['category']) && $template['category'] === $category;
+            });
+        }
+
+        if (empty($templates)) {
+            $this->warn("No templates found for category '{$category}'. Using default.");
+            return config('sage-native-block.default_template', 'basic');
+        }
+
+        // For 'basic' category, just return the basic template directly
+        if ($category === 'basic') {
+            return 'basic';
         }
 
         $choices = [];
