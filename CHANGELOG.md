@@ -56,10 +56,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Step 2: Select specific template within chosen category
   - Improved user experience with logical grouping of related templates
   - Categories are presented with clear descriptions to guide selection
-- **Dynamic Theme Detection** - Template categories now automatically detect themes
-  - System scans `stubs/themes/` directory for available theme folders
-  - Any new theme added to `stubs/themes/` automatically appears as a category option
-  - No code changes needed to add new theme template categories
+- **Dynamic Theme Detection** - Template categories intelligently detect themes
+  - **Auto-detection for users**: Scans your Sage theme's `stubs/themes/` directory automatically
+  - **Config-based for package**: Package templates (like Nynaeve) must be explicitly defined in config
+  - Any new theme folder added to your Sage theme automatically appears as a category option
+  - Package developers must register themes in config to prevent accidental exposure of incomplete templates
+  - Theme stub files are checked in theme first, then package (allows overriding)
   - Theme names are automatically formatted for display (e.g., "Nynaeve Theme - Production templates from Nynaeve theme")
 - **Template Configuration** - Added `category` field to all template definitions
   - Templates now organized by category: `basic`, `generic`, or theme name
@@ -68,8 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Interactive Flow Enhancement** - Basic block selection is now streamlined
   - Selecting "Basic Block" category immediately uses the basic template without additional prompts
   - Generic and theme categories show template options for user selection
-- **Developer Notes** - To add a new theme's templates: Create folder `stubs/themes/your-theme-name/` and add templates to config with `'category' => 'your-theme-name'`
-  - The system will automatically detect and display the new theme category
+- **Developer Notes**:
+  - **For end users**: Create `your-sage-theme/stubs/themes/your-theme-name/` and add config entries - category auto-appears
+  - **For package developers**: Add theme to package config - no auto-detection from vendor folder
+  - Theme stub files take priority over package files (checked first)
   - Non-interactive mode with `--template` flag continues to work as before for automation
 
 ### Migration Guide

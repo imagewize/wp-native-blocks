@@ -110,9 +110,13 @@ The command automatically presents available categories:
 
 1. **Basic Block** - Default simple block (selected directly, no sub-options)
 2. **Generic Templates** - Universal, theme-agnostic templates that work everywhere
-3. **Theme Templates** - Production-ready templates from specific themes (auto-detected from `stubs/themes/`)
+3. **Theme Templates** - Production-ready templates from specific themes
 
-> 💡 **Dynamic Detection**: Any theme folder you add to `stubs/themes/your-theme-name/` will automatically appear as a new category option!
+> 💡 **Dynamic Detection**: Auto-detection works differently for users vs. package developers:
+> - **Your Sage theme**: Any folder in `your-theme/stubs/themes/` is automatically detected (for end users)
+> - **Package templates**: Must be explicitly defined in config (like Nynaeve - for package developers)
+>
+> This means you can add custom theme templates without any config changes - just create the folder!
 
 The package includes templates in these categories:
 
@@ -227,13 +231,33 @@ Want to create your own block templates? See the [Developer Documentation](docs/
 
 ### Adding Your Own Theme Templates
 
-Want to add templates from your own theme? The package includes dynamic theme detection:
+Want to add templates from your own theme? The package automatically detects theme folders!
 
-1. **Create theme folder**: Add `stubs/themes/your-theme-name/` with your template folders
-2. **Update config**: Add templates to `config/sage-native-block.php` with `'category' => 'your-theme-name'`
-3. **Done!** Your theme will automatically appear as a category option
+1. **Create theme folder**: In your Sage theme root, create `stubs/themes/your-theme-name/` with your template folders
+2. **Publish config**: Run `wp acorn vendor:publish` to get the config file in your theme
+3. **Add config entries**: Add templates to `config/sage-native-block.php` with `'category' => 'your-theme-name'`
+4. **Done!** Your theme category will automatically appear in the selection menu
 
-Example config entry:
+> **Auto-detection**: Just by creating the `stubs/themes/your-theme-name/` folder, the category appears in the menu. You just need to add config entries so users can select individual templates within that category.
+
+#### Directory Structure in Your Theme:
+```
+your-sage-theme/
+├── stubs/
+│   └── themes/
+│       └── your-theme-name/        ← Create this
+│           ├── cta/                ← Your template folders
+│           │   ├── block.json
+│           │   ├── index.js
+│           │   ├── editor.jsx
+│           │   └── ...
+│           └── hero/
+│               └── ...
+└── config/
+    └── sage-native-block.php       ← Add your template configs here
+```
+
+#### Example Config Entry:
 ```php
 'your-theme-cta' => [
     'name' => 'Call-to-Action',
@@ -244,6 +268,8 @@ Example config entry:
 ```
 
 The command will automatically detect your theme folder and display "Your-theme-name Theme" as a selectable category!
+
+**Priority:** The command checks your theme's `stubs/` directory **first**, so you can even override package templates by using the same category name.
 
 ### Contributing Templates
 

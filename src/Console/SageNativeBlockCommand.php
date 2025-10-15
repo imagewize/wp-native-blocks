@@ -314,6 +314,7 @@ PHP;
     /**
      * Copy block stub files to the theme's resources directory.
      * Uses directoryBlockName for the target path and fullBlockName for replacements.
+     * Checks theme's stubs directory first, then package's stubs directory.
      */
     protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $fullBlockName, string $directoryBlockName, string $template): bool
     {
@@ -321,8 +322,14 @@ PHP;
             // Get stub path from config
             $stubPath = $this->getStubPath($template);
 
-            // Source stub directory
-            $stubsDir = dirname(__DIR__, 2).'/stubs/'.$stubPath;
+            // Check theme's stubs directory first
+            $themeStubsDir = get_template_directory() . '/stubs/' . $stubPath;
+
+            // Fall back to package's stubs directory
+            $packageStubsDir = dirname(__DIR__, 2) . '/stubs/' . $stubPath;
+
+            // Use theme stubs if they exist, otherwise use package stubs
+            $stubsDir = $this->files->isDirectory($themeStubsDir) ? $themeStubsDir : $packageStubsDir;
 
             // Target directory in the theme using the directoryBlockName
             $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$directoryBlockName}");
@@ -531,7 +538,10 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
 
     /**
      * Get available template categories dynamically.
-     * Returns categories from config templates plus any theme folders found in stubs/themes/
+     * Returns categories from config templates plus any theme folders found in the Sage theme.
+     *
+     * Auto-detection ONLY scans the theme's stubs/themes/ directory.
+     * Package templates (like Nynaeve) must be explicitly defined in config.
      */
     protected function getAvailableCategories(): array
     {
@@ -540,18 +550,32 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
             'generic' => 'Generic Templates - Universal, theme-agnostic templates',
         ];
 
-        // Scan stubs/themes/ directory for theme folders
-        $themesDir = dirname(__DIR__, 2) . '/stubs/themes';
+        $themeFolderNames = [];
 
-        if ($this->files->isDirectory($themesDir)) {
-            $themeFolders = $this->files->directories($themesDir);
+        // Get theme categories from config (for package-provided themes like Nynaeve)
+        $templates = config('sage-native-block.templates', []);
+        foreach ($templates as $template) {
+            if (isset($template['category']) &&
+                !in_array($template['category'], ['basic', 'generic'])) {
+                $themeFolderNames[$template['category']] = true;
+            }
+        }
 
+        // Auto-detect custom themes from the Sage theme's stubs/themes/ directory
+        $themeStubsDir = get_template_directory() . '/stubs/themes';
+        if ($this->files->isDirectory($themeStubsDir)) {
+            $themeFolders = $this->files->directories($themeStubsDir);
             foreach ($themeFolders as $themeFolder) {
                 $themeName = basename($themeFolder);
-                // Capitalize theme name for display
-                $displayName = ucfirst($themeName);
-                $categories[$themeName] = "{$displayName} Theme - Production templates from {$displayName} theme";
+                $themeFolderNames[$themeName] = true;
             }
+        }
+
+        // Create categories for all unique theme names
+        foreach (array_keys($themeFolderNames) as $themeName) {
+            // Capitalize theme name for display
+            $displayName = ucfirst($themeName);
+            $categories[$themeName] = "{$displayName} Theme - Production templates from {$displayName} theme";
         }
 
         return $categories;
