@@ -314,22 +314,27 @@ PHP;
     /**
      * Copy block stub files to the theme's resources directory.
      * Uses directoryBlockName for the target path and fullBlockName for replacements.
-     * Checks theme's stubs directory first, then package's stubs directory.
+     * Checks theme's block-templates directory first, then package's stubs directory.
      */
     protected function copyBlockStubs(RootsFilesystem $rootsFiles, string $fullBlockName, string $directoryBlockName, string $template): bool
     {
         try {
-            // Get stub path from config
+            // Get stub path from config or theme templates
             $stubPath = $this->getStubPath($template);
 
-            // Check theme's stubs directory first
-            $themeStubsDir = get_template_directory() . '/stubs/' . $stubPath;
+            // Check if this is a theme template (from block-templates/)
+            if ($this->isThemeTemplate($template)) {
+                $stubsDir = get_template_directory() . '/block-templates/' . $stubPath;
+            } else {
+                // Package template - use stubs directory
+                $stubsDir = dirname(__DIR__, 2) . '/stubs/' . $stubPath;
+            }
 
-            // Fall back to package's stubs directory
-            $packageStubsDir = dirname(__DIR__, 2) . '/stubs/' . $stubPath;
-
-            // Use theme stubs if they exist, otherwise use package stubs
-            $stubsDir = $this->files->isDirectory($themeStubsDir) ? $themeStubsDir : $packageStubsDir;
+            // Validate the directory exists
+            if (!$this->files->isDirectory($stubsDir)) {
+                $this->error("Template directory not found: {$stubsDir}");
+                return false;
+            }
 
             // Target directory in the theme using the directoryBlockName
             $targetDir = $this->resolvePath($rootsFiles, "resources/js/blocks/{$directoryBlockName}");
@@ -538,10 +543,10 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
 
     /**
      * Get available template categories dynamically.
-     * Returns categories from config templates plus any theme folders found in the Sage theme.
+     * Returns categories from config templates plus auto-detected theme templates.
      *
-     * Auto-detection ONLY scans the theme's stubs/themes/ directory.
-     * Package templates (like Nynaeve) must be explicitly defined in config.
+     * Scans the theme's block-templates/ directory for custom templates.
+     * Package templates must be explicitly defined in config.
      */
     protected function getAvailableCategories(): array
     {
@@ -550,35 +555,111 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
             'generic' => 'Generic Templates - Universal, theme-agnostic templates',
         ];
 
-        $themeFolderNames = [];
+        $categoryNames = [];
 
-        // Get theme categories from config (for package-provided themes like Nynaeve)
+        // Get categories from config (for package-provided themes like Nynaeve)
         $templates = config('sage-native-block.templates', []);
         foreach ($templates as $template) {
             if (isset($template['category']) &&
                 !in_array($template['category'], ['basic', 'generic'])) {
-                $themeFolderNames[$template['category']] = true;
+                $categoryNames[$template['category']] = true;
             }
         }
 
-        // Auto-detect custom themes from the Sage theme's stubs/themes/ directory
-        $themeStubsDir = get_template_directory() . '/stubs/themes';
-        if ($this->files->isDirectory($themeStubsDir)) {
-            $themeFolders = $this->files->directories($themeStubsDir);
-            foreach ($themeFolders as $themeFolder) {
-                $themeName = basename($themeFolder);
-                $themeFolderNames[$themeName] = true;
+        // Auto-detect custom templates from the Sage theme's block-templates/ directory
+        $themeTemplates = $this->getThemeTemplates();
+        foreach ($themeTemplates as $templateData) {
+            $category = $templateData['category'] ?? 'custom';
+            if (!in_array($category, ['basic', 'generic'])) {
+                $categoryNames[$category] = true;
             }
         }
 
-        // Create categories for all unique theme names
-        foreach (array_keys($themeFolderNames) as $themeName) {
-            // Capitalize theme name for display
-            $displayName = ucfirst($themeName);
-            $categories[$themeName] = "{$displayName} Theme - Production templates from {$displayName} theme";
+        // Create categories for all unique category names
+        foreach (array_keys($categoryNames) as $categoryName) {
+            // Capitalize category name for display
+            $displayName = ucfirst($categoryName);
+            $categories[$categoryName] = "{$displayName} Theme - Production templates from {$displayName} theme";
         }
 
         return $categories;
+    }
+
+    /**
+     * Get all available templates from theme's block-templates/ directory.
+     * Returns array of template data including metadata.
+     */
+    protected function getThemeTemplates(): array
+    {
+        $themeTemplates = [];
+        $blockTemplatesDir = get_template_directory() . '/block-templates';
+
+        if (!$this->files->isDirectory($blockTemplatesDir)) {
+            return $themeTemplates;
+        }
+
+        $templateFolders = $this->files->directories($blockTemplatesDir);
+
+        foreach ($templateFolders as $templateFolder) {
+            $templateName = basename($templateFolder);
+            $blockJsonPath = $templateFolder . '/block.json';
+
+            // Only include if block.json exists
+            if (!$this->files->exists($blockJsonPath)) {
+                continue;
+            }
+
+            // Try to load metadata
+            $metadata = $this->loadTemplateMetadata($templateFolder);
+
+            $themeTemplates[$templateName] = [
+                'name' => $metadata['name'] ?? $this->humanizeTemplateName($templateName),
+                'description' => $metadata['description'] ?? 'Custom template',
+                'category' => $metadata['category'] ?? 'custom',
+                'stub_path' => $templateName, // Direct folder name
+                'is_theme_template' => true,
+            ];
+        }
+
+        return $themeTemplates;
+    }
+
+    /**
+     * Load template metadata from template-meta.json if it exists.
+     */
+    protected function loadTemplateMetadata(string $templateFolder): array
+    {
+        $metadataPath = $templateFolder . '/template-meta.json';
+
+        if (!$this->files->exists($metadataPath)) {
+            return [];
+        }
+
+        try {
+            $content = $this->files->get($metadataPath);
+            $metadata = json_decode($content, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->warn("Invalid JSON in {$metadataPath}. Using defaults.");
+                return [];
+            }
+
+            return $metadata;
+        } catch (\Exception $e) {
+            $this->warn("Could not read {$metadataPath}. Using defaults.");
+            return [];
+        }
+    }
+
+    /**
+     * Convert template folder name to human-readable format.
+     * Example: "my-hero-section" -> "My Hero Section"
+     */
+    protected function humanizeTemplateName(string $name): string
+    {
+        $words = explode('-', $name);
+        $words = array_map('ucfirst', $words);
+        return implode(' ', $words);
     }
 
     /**
@@ -607,24 +688,32 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
     /**
      * Prompt user to select a template interactively.
      * Optionally filter by category.
+     * Merges package templates with theme templates.
      */
     protected function promptForTemplate(?string $category = null): string
     {
-        $templates = config('sage-native-block.templates', []);
+        // Get package templates from config
+        $packageTemplates = config('sage-native-block.templates', []);
 
-        if (empty($templates)) {
-            $this->warn('No templates found in configuration. Using default.');
+        // Get theme templates
+        $themeTemplates = $this->getThemeTemplates();
+
+        // Merge templates (theme templates override package templates with same key)
+        $allTemplates = array_merge($packageTemplates, $themeTemplates);
+
+        if (empty($allTemplates)) {
+            $this->warn('No templates found. Using default.');
             return config('sage-native-block.default_template', 'basic');
         }
 
         // Filter templates by category if provided
         if ($category !== null) {
-            $templates = array_filter($templates, function ($template) use ($category) {
+            $allTemplates = array_filter($allTemplates, function ($template) use ($category) {
                 return isset($template['category']) && $template['category'] === $category;
             });
         }
 
-        if (empty($templates)) {
+        if (empty($allTemplates)) {
             $this->warn("No templates found for category '{$category}'. Using default.");
             return config('sage-native-block.default_template', 'basic');
         }
@@ -636,8 +725,9 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
 
         $choices = [];
         $keys = [];
-        foreach ($templates as $key => $template) {
-            $choices[] = "{$template['name']} - {$template['description']}";
+        foreach ($allTemplates as $key => $template) {
+            $source = isset($template['is_theme_template']) ? ' (Custom)' : '';
+            $choices[] = "{$template['name']}{$source} - {$template['description']}";
             $keys[] = $key;
         }
 
@@ -655,25 +745,53 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
     }
 
     /**
-     * Validate if a template exists in the configuration.
+     * Validate if a template exists in configuration or theme templates.
      */
     protected function isValidTemplate(string $template): bool
     {
-        $templates = config('sage-native-block.templates', []);
-        return isset($templates[$template]);
+        // Check package templates
+        $packageTemplates = config('sage-native-block.templates', []);
+        if (isset($packageTemplates[$template])) {
+            return true;
+        }
+
+        // Check theme templates
+        $themeTemplates = $this->getThemeTemplates();
+        if (isset($themeTemplates[$template])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
      * Get the stub path for a given template.
+     * Checks theme templates first, then falls back to package templates.
      */
     protected function getStubPath(string $template): string
     {
-        $templates = config('sage-native-block.templates', []);
-
-        if (!isset($templates[$template])) {
-            return 'block'; // Fallback to default
+        // Check theme templates first (priority)
+        $themeTemplates = $this->getThemeTemplates();
+        if (isset($themeTemplates[$template])) {
+            return $themeTemplates[$template]['stub_path'];
         }
 
-        return $templates[$template]['stub_path'] ?? 'block';
+        // Fall back to package templates
+        $packageTemplates = config('sage-native-block.templates', []);
+        if (isset($packageTemplates[$template])) {
+            return $packageTemplates[$template]['stub_path'] ?? 'block';
+        }
+
+        // Final fallback
+        return 'block';
+    }
+
+    /**
+     * Check if a template is from the theme (not package).
+     */
+    protected function isThemeTemplate(string $template): bool
+    {
+        $themeTemplates = $this->getThemeTemplates();
+        return isset($themeTemplates[$template]);
     }
 }

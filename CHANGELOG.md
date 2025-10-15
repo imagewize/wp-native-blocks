@@ -70,13 +70,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Interactive Flow Enhancement** - Basic block selection is now streamlined
   - Selecting "Basic Block" category immediately uses the basic template without additional prompts
   - Generic and theme categories show template options for user selection
+- **Custom Template Support** - Users can now add custom block templates without modifying vendor package
+  - Create templates in your Sage theme's `block-templates/` directory
+  - Templates are automatically detected and available in the template selection menu
+  - No configuration file needed - just drop your template files and they appear
+  - Override package templates by creating a template with the same name in your theme
+- **Template Metadata** - Optional `template-meta.json` for rich template descriptions
+  - Define custom name, description, and category for your templates
+  - Falls back to auto-generated values from folder name if metadata not provided
+  - Schema: `{ "name": "...", "description": "...", "category": "..." }`
+  - Metadata file is completely optional - templates work without it
+- **Smart Template Discovery** - Automatic template detection from both package and theme
+  - Scans theme's `block-templates/` directory for any folder containing `block.json`
+  - Merges theme templates with package templates
+  - Theme templates take precedence over package templates with same name
+  - Templates organized by category in selection menu
+  - Custom templates show "(Custom)" indicator in selection menu for clear differentiation
 - **Developer Notes**:
-  - **For end users**: Create `your-sage-theme/stubs/themes/your-theme-name/` and add config entries - category auto-appears
-  - **For package developers**: Add theme to package config - no auto-detection from vendor folder
-  - Theme stub files take priority over package files (checked first)
+  - **For theme developers**: Use `block-templates/` directory in your Sage theme root
+  - **For package developers**: Continue using `stubs/` with config definitions
+  - Theme templates can override package templates (checked first)
+  - Template name = folder name (use kebab-case for consistency)
+  - Folder names automatically converted to human-readable format (e.g., "my-hero" → "My Hero")
   - Non-interactive mode with `--template` flag continues to work as before for automation
 
 ### Migration Guide
+
+**Command Name Change:**
 
 The old command still works but shows a deprecation warning:
 ```shell
@@ -87,6 +107,20 @@ wp acorn sage-native-block:add-setup my-block --template=cta --force
 # New command (recommended)
 wp acorn sage-native-block:create my-block --template=cta --force
 ```
+
+**Custom Templates:**
+
+Users can now create custom templates in their theme:
+```bash
+# Create template folder in your theme
+mkdir -p block-templates/my-hero
+# Add your template files (block.json, editor.jsx, save.jsx, etc.)
+
+# Optional: Add metadata for better display
+echo '{"name":"Hero Section","description":"Custom hero template","category":"custom"}' > block-templates/my-hero/template-meta.json
+```
+
+Templates automatically appear in the category selection menu on next run.
 
 ## [1.1.0] - 2025-10-14
 

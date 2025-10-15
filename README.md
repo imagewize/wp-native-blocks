@@ -111,12 +111,14 @@ The command automatically presents available categories:
 1. **Basic Block** - Default simple block (selected directly, no sub-options)
 2. **Generic Templates** - Universal, theme-agnostic templates that work everywhere
 3. **Theme Templates** - Production-ready templates from specific themes
+4. **Custom Templates** - Your own custom templates (auto-detected)
 
-> 💡 **Dynamic Detection**: Auto-detection works differently for users vs. package developers:
-> - **Your Sage theme**: Any folder in `your-theme/stubs/themes/` is automatically detected (for end users)
-> - **Package templates**: Must be explicitly defined in config (like Nynaeve - for package developers)
->
-> This means you can add custom theme templates without any config changes - just create the folder!
+> 💡 **Custom Templates**: Create your own templates without modifying the vendor package!
+> - Create a folder in your theme: `block-templates/my-template/`
+> - Add required files: `block.json`, `index.js`, `editor.jsx`, `save.jsx`, etc.
+> - Optional: Add `template-meta.json` for custom name, description, and category
+> - Templates automatically appear in the selection menu
+> - Override package templates by using the same template name
 
 The package includes templates in these categories:
 
@@ -223,53 +225,115 @@ After publishing the config file (`wp acorn vendor:publish`), you can customize 
 
 ### Creating Custom Templates
 
-Want to create your own block templates? See the [Developer Documentation](docs/DEV.md#creating-custom-templates) for detailed instructions on:
-- Template file requirements
-- Placeholder system
-- Registration process
-- Best practices
+Want to create your own block templates? It's incredibly simple - **no configuration needed!**
 
-### Adding Your Own Theme Templates
+#### Quick Start
 
-Want to add templates from your own theme? The package automatically detects theme folders!
+1. **Create template folder** in your Sage theme root:
+   ```bash
+   mkdir -p block-templates/my-hero
+   ```
 
-1. **Create theme folder**: In your Sage theme root, create `stubs/themes/your-theme-name/` with your template folders
-2. **Publish config**: Run `wp acorn vendor:publish` to get the config file in your theme
-3. **Add config entries**: Add templates to `config/sage-native-block.php` with `'category' => 'your-theme-name'`
-4. **Done!** Your theme category will automatically appear in the selection menu
+2. **Add template files** (copy from an existing template or create from scratch):
+   ```
+   block-templates/my-hero/
+   ├── block.json
+   ├── index.js
+   ├── editor.jsx
+   ├── save.jsx
+   ├── editor.css
+   ├── style.css
+   └── view.js
+   ```
 
-> **Auto-detection**: Just by creating the `stubs/themes/your-theme-name/` folder, the category appears in the menu. You just need to add config entries so users can select individual templates within that category.
+3. **Run the command** - Your template automatically appears in the menu:
+   ```bash
+   wp acorn sage-native-block:create
+   ```
+
+That's it! No config files, no vendor package modification needed.
+
+#### Optional: Add Metadata
+
+For better display names and organization, add `template-meta.json`:
+
+```json
+{
+  "name": "Hero Section",
+  "description": "Full-featured hero with background image support",
+  "category": "custom"
+}
+```
+
+**Metadata fields (all optional):**
+- `name` - Display name in menu (defaults to folder name)
+- `description` - Template description (defaults to "Custom template")
+- `category` - Category name (defaults to "custom")
+- `author` - Template author
+- `version` - Template version
+
+#### Override Package Templates
+
+Create a template with the same name as a package template to override it:
+
+```bash
+# Override the generic "innerblocks" template
+mkdir -p block-templates/innerblocks
+# Add your custom files...
+```
+
+Your theme's version will be used instead of the package version.
+
+#### Example: Creating a Hero Template
+
+```bash
+# 1. Copy an existing template as a starting point
+cp -r vendor/imagewize/sage-native-block/stubs/generic/innerblocks block-templates/hero
+
+# 2. Customize the files (editor.jsx, save.jsx, etc.)
+
+# 3. Add metadata
+cat > block-templates/hero/template-meta.json << 'EOF'
+{
+  "name": "Hero Section",
+  "description": "Hero with heading, text, and background image",
+  "category": "layout"
+}
+EOF
+
+# 4. Use it!
+wp acorn sage-native-block:create my-hero --template=hero
+```
+
+> 💡 **Tip**: Check out existing templates in `vendor/imagewize/sage-native-block/stubs/` for examples and inspiration.
+
+For advanced template customization, see the [Custom Template Stubs Documentation](docs/CUSTOM-TEMPLATE-STUBS.md).
 
 #### Directory Structure in Your Theme:
 ```
 your-sage-theme/
-├── stubs/
-│   └── themes/
-│       └── your-theme-name/        ← Create this
-│           ├── cta/                ← Your template folders
-│           │   ├── block.json
-│           │   ├── index.js
-│           │   ├── editor.jsx
-│           │   └── ...
-│           └── hero/
-│               └── ...
+├── block-templates/              ← Create this folder
+│   ├── hero/                     ← Your custom template
+│   │   ├── block.json
+│   │   ├── index.js
+│   │   ├── editor.jsx
+│   │   ├── save.jsx
+│   │   ├── editor.css
+│   │   ├── style.css
+│   │   ├── view.js
+│   │   └── template-meta.json    ← Optional metadata
+│   ├── cta/                      ← Another custom template
+│   │   └── ...
+│   └── stats/                    ← Yet another template
+│       └── ...
+├── resources/
+│   └── js/
+│       └── blocks/               ← Generated blocks go here
 └── config/
-    └── sage-native-block.php       ← Add your template configs here
+    └── sage-native-block.php     ← Optional: published config
 ```
 
-#### Example Config Entry:
-```php
-'your-theme-cta' => [
-    'name' => 'Call-to-Action',
-    'description' => 'Styled CTA from Your Theme',
-    'stub_path' => 'themes/your-theme-name/cta',
-    'category' => 'your-theme-name',
-],
-```
-
-The command will automatically detect your theme folder and display "Your-theme-name Theme" as a selectable category!
-
-**Priority:** The command checks your theme's `stubs/` directory **first**, so you can even override package templates by using the same category name.
+Templates in `block-templates/` are automatically discovered - no configuration needed!
 
 ### Contributing Templates
 
