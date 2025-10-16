@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-10-16
+
+### Fixed
+
+- **Config Loading Issue** - Fixed template configuration not loading in production environments
+  - Added fallback config loading directly from package config file
+  - Resolves "No templates found" error when running `wp acorn sage-native-block:create`
+  - Templates now load correctly even if Laravel config() helper fails
+  - Improved resilience for production WordPress/Acorn environments
+
 ## [2.0.0] - 2025-10-14
 
 ### Changed - BREAKING CHANGES
@@ -207,7 +217,8 @@ Templates automatically appear in the category selection menu on next run.
 - Configuration documentation
 - Feature overview and examples
 
-[Unreleased]: https://github.com/imagewize/sage-native-block/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/imagewize/sage-native-block/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/imagewize/sage-native-block/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/imagewize/sage-native-block/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/imagewize/sage-native-block/compare/v1.0.1...v1.0.2

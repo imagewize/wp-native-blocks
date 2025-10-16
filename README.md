@@ -23,18 +23,24 @@ You can install this package with Composer from your Sage 11+ theme root directo
 composer require imagewize/sage-native-block --dev
 ```
 
-**NB** You can drop `--dev` but then it will be included in your production build.
+**That's it!** The package is ready to use. No additional setup required.
 
+You can drop `--dev` but then it will be included in your production build.
 
-## Configuration
+## Configuration (Optional)
 
-You can publish the config file with:
+The package works out of the box with default settings. However, you can optionally publish the config file to customize template settings:
 
 ```shell
 wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\SageNativeBlockServiceProvider"
 ```
 
-**NB**: This is recommended to customize template settings. The package includes default configuration with 5 block templates and typography/spacing presets.
+**When to publish:**
+- You want to customize typography or spacing presets
+- You want to add your own template definitions to the config
+- You're experiencing config loading issues in your environment (rare)
+
+**Note:** Since v2.0.1, the package automatically falls back to loading config directly if it's not published, making this step truly optional.
 
 ## Usage
 
@@ -221,7 +227,15 @@ resources/js/blocks/testimonial/
 
 ### Typography and Spacing Presets
 
-After publishing the config file (`wp acorn vendor:publish`), you can customize typography and spacing presets in `config/sage-native-block.php` to match your theme's design system.
+**Optional:** If you want to customize global typography and spacing presets used by package templates, publish the config file:
+
+```bash
+wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\SageNativeBlockServiceProvider"
+```
+
+Then edit `config/sage-native-block.php` to match your theme's design system.
+
+**Note:** This only affects package templates (basic, generic, nynaeve). Your custom templates in `block-templates/` are unaffected and use whatever styles you define in them.
 
 ### Creating Custom Templates
 
