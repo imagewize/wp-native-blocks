@@ -158,7 +158,8 @@ class SageNativeBlockCommand extends Command
         }
 
         // Get template display name
-        $templateConfig = config('sage-native-block.templates')[$template] ?? [];
+        $allTemplates = array_merge($this->getTemplatesConfig(), $this->getThemeTemplates());
+        $templateConfig = $allTemplates[$template] ?? [];
         $templateName = $templateConfig['name'] ?? $template;
 
         // Extract the base name for directory structure
@@ -542,6 +543,47 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
     }
 
     /**
+     * Get templates configuration with fallback to package config file.
+     * This ensures templates are available even if config() helper fails.
+     */
+    protected function getTemplatesConfig(): array
+    {
+        $templates = config('sage-native-block.templates', null);
+
+        // If config is not loaded (returns null or empty), load directly from package
+        if ($templates === null || empty($templates)) {
+            $configPath = dirname(__DIR__, 2) . '/config/sage-native-block.php';
+
+            if (file_exists($configPath)) {
+                $config = require $configPath;
+                $templates = $config['templates'] ?? [];
+            }
+        }
+
+        return $templates ?: [];
+    }
+
+    /**
+     * Get default template with fallback to package config file.
+     */
+    protected function getDefaultTemplate(): string
+    {
+        $default = config('sage-native-block.default_template', null);
+
+        // If config is not loaded, load directly from package
+        if ($default === null) {
+            $configPath = dirname(__DIR__, 2) . '/config/sage-native-block.php';
+
+            if (file_exists($configPath)) {
+                $config = require $configPath;
+                $default = $config['default_template'] ?? 'basic';
+            }
+        }
+
+        return $default ?: 'basic';
+    }
+
+    /**
      * Get available template categories dynamically.
      * Returns categories from config templates plus auto-detected theme templates.
      *
@@ -558,7 +600,7 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
         $categoryNames = [];
 
         // Get categories from config (for package-provided themes like Nynaeve)
-        $templates = config('sage-native-block.templates', []);
+        $templates = $this->getTemplatesConfig();
         foreach ($templates as $template) {
             if (isset($template['category']) &&
                 !in_array($template['category'], ['basic', 'generic'])) {
@@ -693,7 +735,7 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
     protected function promptForTemplate(?string $category = null): string
     {
         // Get package templates from config
-        $packageTemplates = config('sage-native-block.templates', []);
+        $packageTemplates = $this->getTemplatesConfig();
 
         // Get theme templates
         $themeTemplates = $this->getThemeTemplates();
@@ -703,7 +745,7 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
 
         if (empty($allTemplates)) {
             $this->warn('No templates found. Using default.');
-            return config('sage-native-block.default_template', 'basic');
+            return $this->getDefaultTemplate();
         }
 
         // Filter templates by category if provided
@@ -715,7 +757,7 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
 
         if (empty($allTemplates)) {
             $this->warn("No templates found for category '{$category}'. Using default.");
-            return config('sage-native-block.default_template', 'basic');
+            return $this->getDefaultTemplate();
         }
 
         // For 'basic' category, just return the basic template directly
@@ -731,7 +773,7 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
             $keys[] = $key;
         }
 
-        $defaultIndex = array_search(config('sage-native-block.default_template', 'basic'), $keys);
+        $defaultIndex = array_search($this->getDefaultTemplate(), $keys);
         if ($defaultIndex === false) {
             $defaultIndex = 0;
         }
@@ -750,7 +792,7 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
     protected function isValidTemplate(string $template): bool
     {
         // Check package templates
-        $packageTemplates = config('sage-native-block.templates', []);
+        $packageTemplates = $this->getTemplatesConfig();
         if (isset($packageTemplates[$template])) {
             return true;
         }
@@ -777,7 +819,7 @@ JS; // Ensure this is at the start of the line with no preceding whitespace
         }
 
         // Fall back to package templates
-        $packageTemplates = config('sage-native-block.templates', []);
+        $packageTemplates = $this->getTemplatesConfig();
         if (isset($packageTemplates[$template])) {
             return $packageTemplates[$template]['stub_path'] ?? 'block';
         }
