@@ -6,12 +6,12 @@ WordPress plugin for scaffolding native Gutenberg blocks in block themes with pe
 
 ## Features
 
-- 🎨 Per-block builds with @wordpress/scripts
-- ⚛️ React-based blocks with JSX
-- 📦 Standard block structure (src/ → build/)
-- 🎯 Designed for block themes (FSE)
-- 🚀 Moiraine theme templates included
-- 💪 Simple WP-CLI commands
+- Per-block builds with @wordpress/scripts
+- React-based blocks with JSX
+- Standard block structure (src/ → build/)
+- Designed for block themes (FSE)
+- Moiraine theme templates included
+- Simple WP-CLI commands
 
 ## Requirements
 
@@ -170,11 +170,11 @@ Use placeholders in your stubs:
 
 This plugin is specifically designed for modern block themes (FSE) because:
 
-- ✅ Standardized block location (`blocks/`)
-- ✅ Per-block builds (simple, independent)
-- ✅ React-based architecture
-- ✅ Clean, predictable structure
-- ✅ Focused on modern WordPress
+- Standardized block location (`blocks/`)
+- Per-block builds (simple, independent)
+- React-based architecture
+- Clean, predictable structure
+- Focused on modern WordPress
 
 ## File Structure
 
