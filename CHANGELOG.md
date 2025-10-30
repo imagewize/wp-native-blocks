@@ -20,12 +20,12 @@ This is a complete rewrite focused exclusively on **WordPress block themes (FSE)
 - Repository renamed to `wp-native-blocks`
 
 **Architecture Changes:**
-- ❌ **Removed** all Acorn/Laravel dependencies
-- ❌ **Removed** Sage theme integration
-- ❌ **Removed** service providers, facades, and Acorn-specific code
-- ✅ **Added** standalone WordPress plugin architecture
-- ✅ **Added** direct WP-CLI command registration
-- ✅ **Simplified** to ~300 lines vs thousands in v2.x
+- **Removed** all Acorn/Laravel dependencies
+- **Removed** Sage theme integration
+- **Removed** service providers, facades, and Acorn-specific code
+- **Added** standalone WordPress plugin architecture
+- **Added** direct WP-CLI command registration
+- **Simplified** to ~300 lines vs thousands in v2.x
 
 **Command Changes:**
 - Old: `wp acorn sage-native-block:create`
@@ -41,10 +41,10 @@ This is a complete rewrite focused exclusively on **WordPress block themes (FSE)
 - Registration: Auto-registers from `build/block.json` path
 
 **File Changes:**
-- ✅ React components use `.jsx` extension (was `.jsx` but now enforced)
-- ✅ Source in `src/` directory, compiled to `build/`
-- ✅ Uses `.scss` for styles (compiled by @wordpress/scripts)
-- ✅ Standard WordPress build tooling only
+- React components use `.jsx` extension (was `.jsx` but now enforced)
+- Source in `src/` directory, compiled to `build/`
+- Uses `.scss` for styles (compiled by @wordpress/scripts)
+- Standard WordPress build tooling only
 
 ### Added
 
@@ -91,17 +91,17 @@ This is a complete rewrite focused exclusively on **WordPress block themes (FSE)
 
 ### Removed
 
-- ❌ Acorn/Laravel service providers (`src/Providers/`)
-- ❌ Acorn facades (`src/Facades/`)
-- ❌ Acorn console commands (`src/Console/`)
-- ❌ Laravel/Acorn configuration system
-- ❌ Theme detection logic
-- ❌ Multiple build system support
-- ❌ Sage-specific path handling
-- ❌ Complex template category system
-- ❌ Interactive prompts (simplified to CLI args)
-- ❌ Theme.json preset configuration
-- ❌ Vendor publishing system
+- Acorn/Laravel service providers (`src/Providers/`)
+- Acorn facades (`src/Facades/`)
+- Acorn console commands (`src/Console/`)
+- Laravel/Acorn configuration system
+- Theme detection logic
+- Multiple build system support
+- Sage-specific path handling
+- Complex template category system
+- Interactive prompts (simplified to CLI args)
+- Theme.json preset configuration
+- Vendor publishing system
 
 ### Migration from 2.x
 
