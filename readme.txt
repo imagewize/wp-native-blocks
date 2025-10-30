@@ -4,7 +4,7 @@ Tags: gutenberg, blocks, development, cli, scaffolding, fse, block-theme
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 3.0.0
+Stable tag: 3.0.2
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -100,6 +100,16 @@ npm run build  # Production
 4. Per-block package.json setup
 
 == Changelog ==
+
+= 3.0.2 =
+* Improved Composer stability configuration for better installation reliability
+* Enhanced installation documentation with version constraint requirement
+* Clarified --dev flag usage for development-only installation
+
+= 3.0.1 =
+* Documentation improvements and cleanup
+* Added CLAUDE.md for AI-assisted development guidance
+* Removed legacy configure.php file
 
 = 3.0.0 =
 * Complete rewrite as block-theme-focused plugin
