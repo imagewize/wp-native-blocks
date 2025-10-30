@@ -1,0 +1,16 @@
+import { useBlockProps, RichText } from '@wordpress/block-editor';
+
+export default function Edit({ attributes, setAttributes }) {
+    const blockProps = useBlockProps();
+
+    return (
+        <div {...blockProps}>
+            <RichText
+                tagName="h2"
+                value={attributes.content}
+                onChange={(content) => setAttributes({ content })}
+                placeholder="Enter content..."
+            />
+        </div>
+    );
+}

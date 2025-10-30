@@ -1,9 +1,0 @@
-/**
- * Editor-specific styles.
- */
-.wp-block-vendor-example-block {
-  /* Editor-only border to make the block container visible when editing */
-  border: 2px dashed #007cba;
-  padding: 2rem 1rem;
-  min-height: 150px;
-}

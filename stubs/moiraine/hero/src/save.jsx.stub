@@ -1,0 +1,20 @@
+import { useBlockProps, RichText } from '@wordpress/block-editor';
+
+export default function save({ attributes }) {
+    const { heading, text, backgroundImage, minHeight } = attributes;
+    const blockProps = useBlockProps.save({
+        style: {
+            backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+            minHeight: `${minHeight}px`,
+        },
+    });
+
+    return (
+        <div {...blockProps}>
+            <div className="hero-content">
+                <RichText.Content tagName="h1" value={heading} className="hero-heading" />
+                <RichText.Content tagName="p" value={text} className="hero-text" />
+            </div>
+        </div>
+    );
+}

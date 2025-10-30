@@ -1,0 +1,6 @@
+/**
+ * Frontend styles
+ */
+.wp-block-{{BLOCK_SLUG}} {
+    padding: 2rem;
+}

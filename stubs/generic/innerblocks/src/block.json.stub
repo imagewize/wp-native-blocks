@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "{{BLOCK_NAME}}",
+  "version": "1.0.0",
+  "title": "{{BLOCK_SLUG}}",
+  "category": "layout",
+  "icon": "editor-table",
+  "description": "A container block with InnerBlocks",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"],
+    "spacing": {
+      "padding": true,
+      "margin": true
+    },
+    "color": {
+      "background": true,
+      "text": true
+    }
+  },
+  "textdomain": "{{BLOCK_SLUG}}",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

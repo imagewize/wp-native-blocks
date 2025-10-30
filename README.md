@@ -1,369 +1,206 @@
-# Acorn Sage Native Block Package
+# WP Native Blocks
 
-This package helps you create and manage native Gutenberg blocks in your [Sage](https://roots.io/sage/) theme. It provides a convenient command to scaffold block files and automatically register them with WordPress.
+WordPress plugin for scaffolding native Gutenberg blocks in block themes with per-block builds.
 
 ## Features
 
-- **Hierarchical Template Selection** - Organized two-step selection process with template categories
-- **Multiple Block Templates** - Choose from pre-configured templates for common block patterns
-- **Dynamic Theme Detection** - Automatically discovers and displays theme-specific templates
-- Scaffolds a complete native block structure in your Sage theme
-- Automatically adds block registration code to your theme's setup file
-- Creates all necessary block files (JS, JSX, CSS) with proper configuration
-- Handles proper block naming with vendor prefixes
-- Creates editor and frontend styles for your blocks
-- Ensures proper imports of block JS files
-- **80% faster development** - Start with pre-configured templates instead of building from scratch
+- 🎨 Per-block builds with @wordpress/scripts
+- ⚛️ React-based blocks with JSX
+- 📦 Standard block structure (src/ → build/)
+- 🎯 Designed for block themes (FSE)
+- 🚀 Moiraine theme templates included
+- 💪 Simple WP-CLI commands
+
+## Requirements
+
+- WordPress 6.0+
+- PHP 8.0+
+- WP-CLI
+- Node.js & npm (for building blocks)
 
 ## Installation
 
-You can install this package with Composer from your Sage 11+ theme root directory (not from the Bedrock root):
+### Via Composer
 
 ```bash
-composer require imagewize/sage-native-block --dev
+composer require imagewize/wp-native-blocks --dev
 ```
 
-**That's it!** The package is ready to use. No additional setup required.
+### Via WordPress Plugin
 
-You can drop `--dev` but then it will be included in your production build.
-
-## Configuration (Optional)
-
-The package works out of the box with default settings. However, you can optionally publish the config file to customize template settings:
-
-```shell
-wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\SageNativeBlockServiceProvider"
-```
-
-**When to publish:**
-- You want to customize typography or spacing presets
-- You want to add your own template definitions to the config
-- You're experiencing config loading issues in your environment (rare)
-
-**Note:** Since v2.0.1, the package automatically falls back to loading config directly if it's not published, making this step truly optional.
+1. Download and install the plugin
+2. Activate in WordPress admin
+3. Use via WP-CLI
 
 ## Usage
 
-### Creating a new block (Interactive Mode - Recommended)
-
-Simply run the command and follow the prompts:
-
-```shell
-wp acorn sage-native-block:create
-```
-
-You'll be guided through an interactive setup:
-1. **Block name**: Enter your block name (e.g., "my-stats")
-2. **Vendor prefix**: Optionally specify a vendor (defaults to "vendor")
-3. **Template category**: Choose between Basic Block, Generic Templates, or Theme-specific templates
-4. **Template selection**: Choose a specific template within your selected category
-5. **Confirmation**: Review and confirm your choices
-
-The command will then:
-- Create the block in your theme's `resources/js/blocks` directory
-- Add block registration code to your theme's `app/setup.php` if not already present
-- Update `resources/js/editor.js` to import the block files
-
-### Non-Interactive Mode (for automation)
-
-You can still provide all parameters via CLI arguments:
-
-```shell
-wp acorn sage-native-block:create my-block --template=statistics --force
-```
-
-## Command Output
-
-The package provides a clean, professional terminal interface:
-
-```
-🔨 Creating block: imagewize/my-stats
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Template:  Statistics Section (Generic)
-  Location:  resources/js/blocks/my-stats
-
-  Continue? (yes/no) [no]: yes
-
-Setup:
-  ✓ Block registration configured
-  ✓ Editor imports configured
-
-Files:
-  ✓ block.json, index.js
-  ✓ editor.jsx, save.jsx
-  ✓ editor.css, style.css
-  ✓ view.js
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Success! Block ready at resources/js/blocks/my-stats
-```
-
-**Features:**
-- Clear visual hierarchy with emoji header and separators
-- Color-coded output for easy scanning
-- Check marks (✓) for quick status updates
-- Grouped file operations reduce noise
-- Relative paths for better readability
-
-### Block Templates
-
-The package provides an organized, hierarchical template selection system. When creating a block interactively, you'll first choose a **template category**, then select a specific template within that category.
-
-#### Template Categories
-
-The command automatically presents available categories:
-
-1. **Basic Block** - Default simple block (selected directly, no sub-options)
-2. **Generic Templates** - Universal, theme-agnostic templates that work everywhere
-3. **Theme Templates** - Production-ready templates from specific themes
-4. **Custom Templates** - Your own custom templates (auto-detected)
-
-> 💡 **Custom Templates**: Create your own templates without modifying the vendor package!
-> - Create a folder in your theme: `block-templates/my-template/`
-> - Add required files: `block.json`, `index.js`, `editor.jsx`, `save.jsx`, etc.
-> - Optional: Add `template-meta.json` for custom name, description, and category
-> - Templates automatically appear in the selection menu
-> - Override package templates by using the same template name
-
-The package includes templates in these categories:
-
-#### 🟢 Generic Templates (Recommended)
-Universal templates that work with ANY theme - no dependencies required:
-
-| Template | Description | Use Case |
-|----------|-------------|----------|
-| **basic** | Simple block with InnerBlocks support | General-purpose container blocks |
-| **innerblocks** | Minimal heading and content template | Section blocks (add your own styles) |
-| **two-column** | Basic two-column layout structure | Feature comparisons, benefits |
-| **statistics** | Simple statistics layout | Impact metrics, key numbers |
-| **cta** | Basic call-to-action with button | Lead generation, conversions |
-
-#### 🎨 Theme-Specific Templates
-
-Real-world examples from production themes. Currently featuring templates from the **[Nynaeve theme](https://github.com/imagewize/nynaeve)** by Imagewize.
-
-⚠️ **Nynaeve theme requirements:**
-- Font families: `montserrat`, `open-sans`
-- Color slugs: `main`, `secondary`, `tertiary`, `base`
-- Font sizes: `3xl`, `2xl`, `xl`, `lg`, `base`, `sm`
-
-| Template | Description | Use Case |
-|----------|-------------|----------|
-| **nynaeve-innerblocks** | Pre-styled with Nynaeve typography | Production-ready container |
-| **nynaeve-two-column** | Card-style layout from Nynaeve | Polished two-column sections |
-| **nynaeve-statistics** | Complete statistics from Nynaeve | Production-ready stats display |
-| **nynaeve-cta** | Styled CTA from Nynaeve theme | Ready-to-use call-to-action |
-
-> 💡 **Tip:** Use generic templates for universal compatibility, or Nynaeve templates if your theme matches its setup. See [`stubs/themes/nynaeve/README.md`](stubs/themes/nynaeve/README.md) for detailed requirements.
-
-### Command Examples
-
-**Interactive mode (easiest):**
-```shell
-# Follow prompts to create any block
-wp acorn sage-native-block:create
-```
-
-**With block name (prompts for category and template):**
-```shell
-wp acorn sage-native-block:create my-stats
-```
-
-**With vendor prefix:**
-```shell
-wp acorn sage-native-block:create imagewize/my-stats
-```
-
-**Fully automated (no prompts):**
-```shell
-# Generic templates (work everywhere)
-wp acorn sage-native-block:create my-stats --template=statistics --force
-wp acorn sage-native-block:create my-cta --template=cta --force
-wp acorn sage-native-block:create my-columns --template=two-column --force
-wp acorn sage-native-block:create my-container --template=innerblocks --force
-
-# Nynaeve theme templates (requires Nynaeve theme.json setup)
-wp acorn sage-native-block:create my-stats --template=nynaeve-statistics --force
-wp acorn sage-native-block:create imagewize/my-cta --template=nynaeve-cta --force
-```
-
-## Block Structure
-
-The command creates the following files in your `resources/js/blocks/<block-name>/` directory:
-
-- `block.json` - Block metadata and configuration
-- `index.js` - Main block entry point
-- `editor.jsx` - React component for the editor
-- `save.jsx` - React component for the frontend
-- `editor.css` - Styles for the block in the editor
-- `style.css` - Styles for the block on the frontend
-- `view.js` - Frontend JavaScript for the block
-
-## How It Works
-
-The command automatically handles:
-- **Block naming** - Ensures proper vendor prefixes (e.g., `imagewize/my-block`)
-- **CSS classes** - Generates block-specific classes (e.g., `wp-block-imagewize-my-block`)
-- **Registration** - Adds code to `app/setup.php` to auto-register all blocks
-- **Imports** - Updates `resources/js/editor.js` to load block scripts
-- **File structure** - Creates organized directory with all 7 required files
-
-**Example structure for `imagewize/testimonial`:**
-```
-resources/js/blocks/testimonial/
-├── block.json      ← Block metadata
-├── index.js        ← Registration entry point
-├── editor.jsx      ← Edit component
-├── save.jsx        ← Save component
-├── editor.css      ← Editor-only styles
-├── style.css       ← Frontend styles
-└── view.js         ← Frontend JavaScript
-```
-
-> 💡 For technical details on the build process and architecture, see [Developer Documentation](docs/DEV.md)
-
-## Customization
-
-### Typography and Spacing Presets
-
-**Optional:** If you want to customize global typography and spacing presets used by package templates, publish the config file:
+### Basic Block Creation
 
 ```bash
-wp acorn vendor:publish --provider="Imagewize\SageNativeBlockPackage\Providers\SageNativeBlockServiceProvider"
+wp block create vendor/block-name
 ```
 
-Then edit `config/sage-native-block.php` to match your theme's design system.
-
-**Note:** This only affects package templates (basic, generic, nynaeve). Your custom templates in `block-templates/` are unaffected and use whatever styles you define in them.
-
-### Creating Custom Templates
-
-Want to create your own block templates? It's incredibly simple - **no configuration needed!**
-
-#### Quick Start
-
-1. **Create template folder** in your Sage theme root:
-   ```bash
-   mkdir -p block-templates/my-hero
-   ```
-
-2. **Add template files** (copy from an existing template or create from scratch):
-   ```
-   block-templates/my-hero/
-   ├── block.json
-   ├── index.js
-   ├── editor.jsx
-   ├── save.jsx
-   ├── editor.css
-   ├── style.css
-   └── view.js
-   ```
-
-3. **Run the command** - Your template automatically appears in the menu:
-   ```bash
-   wp acorn sage-native-block:create
-   ```
-
-That's it! No config files, no vendor package modification needed.
-
-#### Optional: Add Metadata
-
-For better display names and organization, add `template-meta.json`:
-
-```json
-{
-  "name": "Hero Section",
-  "description": "Full-featured hero with background image support",
-  "category": "custom"
-}
+This creates a complete block structure:
+```
+blocks/block-name/
+├── package.json          # @wordpress/scripts setup
+├── .gitignore
+└── src/                 # Source files
+    ├── block.json       # Block metadata
+    ├── index.js         # Registration
+    ├── edit.jsx         # Editor component (React)
+    ├── save.jsx         # Frontend component (React)
+    ├── style.scss       # Frontend styles
+    ├── editor.scss      # Editor styles
+    └── view.js          # Optional frontend JS
 ```
 
-**Metadata fields (all optional):**
-- `name` - Display name in menu (defaults to folder name)
-- `description` - Template description (defaults to "Custom template")
-- `category` - Category name (defaults to "custom")
-- `author` - Template author
-- `version` - Template version
-
-#### Override Package Templates
-
-Create a template with the same name as a package template to override it:
+### Using Templates
 
 ```bash
-# Override the generic "innerblocks" template
-mkdir -p block-templates/innerblocks
-# Add your custom files...
+# Use Moiraine hero template
+wp block create imagewize/hero --template=moiraine-hero
+
+# Use generic innerblocks template
+wp block create imagewize/container --template=innerblocks
 ```
 
-Your theme's version will be used instead of the package version.
-
-#### Example: Creating a Hero Template
+### Custom Blocks Directory
 
 ```bash
-# 1. Copy an existing template as a starting point
-cp -r vendor/imagewize/sage-native-block/stubs/generic/innerblocks block-templates/hero
-
-# 2. Customize the files (editor.jsx, save.jsx, etc.)
-
-# 3. Add metadata
-cat > block-templates/hero/template-meta.json << 'EOF'
-{
-  "name": "Hero Section",
-  "description": "Hero with heading, text, and background image",
-  "category": "layout"
-}
-EOF
-
-# 4. Use it!
-wp acorn sage-native-block:create my-hero --template=hero
+# Create in custom directory (default: blocks)
+wp block create imagewize/custom --blocks-dir=custom-blocks
 ```
 
-> 💡 **Tip**: Check out existing templates in `vendor/imagewize/sage-native-block/stubs/` for examples and inspiration.
+## Building Blocks
 
-For advanced template customization, see the [Custom Template Stubs Documentation](docs/CUSTOM-TEMPLATE-STUBS.md).
+After creating a block:
 
-#### Directory Structure in Your Theme:
-```
-your-sage-theme/
-├── block-templates/              ← Create this folder
-│   ├── hero/                     ← Your custom template
-│   │   ├── block.json
-│   │   ├── index.js
-│   │   ├── editor.jsx
-│   │   ├── save.jsx
-│   │   ├── editor.css
-│   │   ├── style.css
-│   │   ├── view.js
-│   │   └── template-meta.json    ← Optional metadata
-│   ├── cta/                      ← Another custom template
-│   │   └── ...
-│   └── stats/                    ← Yet another template
-│       └── ...
-├── resources/
-│   └── js/
-│       └── blocks/               ← Generated blocks go here
-└── config/
-    └── sage-native-block.php     ← Optional: published config
+```bash
+cd blocks/your-block
+npm install
+npm run start    # Development with hot reload
+npm run build    # Production build
 ```
 
-Templates in `block-templates/` are automatically discovered - no configuration needed!
+The build outputs to `build/` directory:
+```
+build/
+├── block.json
+├── index.js
+├── index.css          # Editor styles
+└── style-index.css    # Frontend styles
+```
 
-### Contributing Templates
+## Available Templates
 
-Have templates from your production theme? We welcome community contributions! Check the [Theme Templates Guide](stubs/themes/README.md) for guidelines on contributing theme-specific templates.
+### Base Template
+- `base` - Minimal starter with RichText example
 
-## Benefits of Using Templates
+### Generic Templates
+- `innerblocks` - Container with InnerBlocks support
 
-- **80% faster development** - Start with pre-configured templates instead of building from scratch
-- **Organized selection** - Hierarchical categories make finding the right template easy
-- **Extensible system** - Add your own theme templates with automatic detection
-- **Consistent patterns** - All blocks follow established structure and best practices
-- **Theme integration** - Templates use theme.json values for typography and colors
-- **Proper InnerBlocks setup** - Avoid common mistakes with InnerBlocks configuration
-- **Reduced errors** - Well-tested templates reduce debugging time
-- **Learning tool** - See WordPress block best practices in generated code
+### Moiraine Theme Templates
+- `moiraine-hero` - Hero section with background image
 
-## Changelog
+More templates coming soon!
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history and release notes.
+## Block Registration
+
+The plugin automatically adds this code to your theme's `functions.php`:
+
+```php
+add_action('init', function () {
+    $blocks_dir = get_template_directory() . '/blocks';
+
+    if (!is_dir($blocks_dir)) {
+        return;
+    }
+
+    $block_folders = scandir($blocks_dir);
+
+    foreach ($block_folders as $folder) {
+        if ($folder === '.' || $folder === '..') {
+            continue;
+        }
+
+        $block_json_path = $blocks_dir . '/' . $folder . '/build/block.json';
+
+        if (file_exists($block_json_path)) {
+            register_block_type($block_json_path);
+        }
+    }
+}, 10);
+```
+
+## Creating Custom Templates
+
+Create custom templates in your theme:
+
+```
+your-theme/block-templates/
+└── my-template/
+    ├── package.json.stub
+    ├── .gitignore.stub
+    └── src/
+        ├── block.json.stub
+        ├── index.js.stub
+        ├── edit.jsx.stub
+        ├── save.jsx.stub
+        ├── style.scss.stub
+        ├── editor.scss.stub
+        └── view.js.stub
+```
+
+Use placeholders in your stubs:
+- `{{BLOCK_NAME}}` - Full block name (e.g., `vendor/block-name`)
+- `{{BLOCK_SLUG}}` - Slug version (e.g., `vendor-block-name`)
+
+## Workflow
+
+1. **Create block:** `wp block create vendor/name --template=moiraine-hero`
+2. **Install dependencies:** `cd blocks/name && npm install`
+3. **Start development:** `npm run start`
+4. **Edit in WordPress:** Block appears in editor automatically
+5. **Build for production:** `npm run build`
+
+## Why Block Themes Only?
+
+This plugin is specifically designed for modern block themes (FSE) because:
+
+- ✅ Standardized block location (`blocks/`)
+- ✅ Per-block builds (simple, independent)
+- ✅ React-based architecture
+- ✅ Clean, predictable structure
+- ✅ Focused on modern WordPress
+
+## File Structure
+
+Each block follows this consistent pattern:
+
+```
+your-block/
+├── package.json          # Dependencies and scripts
+├── .gitignore           # Ignores node_modules/ and build/
+├── src/                 # Your source code
+│   ├── block.json       # Block configuration
+│   ├── index.js         # Main entry point
+│   ├── edit.jsx         # Editor component
+│   ├── save.jsx         # Save component
+│   ├── style.scss       # Frontend styles
+│   ├── editor.scss      # Editor-only styles
+│   └── view.js          # Optional interactivity
+└── build/               # Compiled output (gitignored)
+    ├── block.json       # Copied from src/
+    ├── index.js         # Compiled JavaScript
+    ├── index.css        # Compiled editor styles
+    └── style-index.css  # Compiled frontend styles
+```
+
+## License
+
+MIT
+
+## Credits
+
+Built by [Imagewize](https://imagewize.com)

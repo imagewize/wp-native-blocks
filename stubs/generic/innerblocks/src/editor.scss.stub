@@ -1,0 +1,6 @@
+/**
+ * Editor-only styles
+ */
+.wp-block-{{BLOCK_SLUG}} {
+    border: 1px dashed #ccc;
+}

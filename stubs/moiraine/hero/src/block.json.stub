@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "{{BLOCK_NAME}}",
+  "version": "1.0.0",
+  "title": "{{BLOCK_SLUG}} Hero",
+  "category": "design",
+  "icon": "cover-image",
+  "description": "Hero section for Moiraine theme",
+  "attributes": {
+    "heading": {
+      "type": "string",
+      "default": ""
+    },
+    "text": {
+      "type": "string",
+      "default": ""
+    },
+    "backgroundImage": {
+      "type": "string",
+      "default": ""
+    },
+    "minHeight": {
+      "type": "number",
+      "default": 500
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "textdomain": "{{BLOCK_SLUG}}",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

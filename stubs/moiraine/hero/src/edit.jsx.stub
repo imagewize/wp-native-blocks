@@ -1,0 +1,58 @@
+import { useBlockProps, InspectorControls, MediaUpload, RichText } from '@wordpress/block-editor';
+import { PanelBody, Button, RangeControl } from '@wordpress/components';
+
+export default function Edit({ attributes, setAttributes }) {
+    const { heading, text, backgroundImage, minHeight } = attributes;
+    const blockProps = useBlockProps({
+        style: {
+            backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+            minHeight: `${minHeight}px`,
+        },
+    });
+
+    return (
+        <>
+            <InspectorControls>
+                <PanelBody title="Hero Settings">
+                    <MediaUpload
+                        onSelect={(media) => setAttributes({ backgroundImage: media.url })}
+                        allowedTypes={['image']}
+                        render={({ open }) => (
+                            <Button onClick={open} variant="secondary">
+                                {backgroundImage ? 'Change Image' : 'Select Image'}
+                            </Button>
+                        )}
+                    />
+
+                    <RangeControl
+                        label="Minimum Height (px)"
+                        value={minHeight}
+                        onChange={(value) => setAttributes({ minHeight: value })}
+                        min={300}
+                        max={1000}
+                        step={50}
+                    />
+                </PanelBody>
+            </InspectorControls>
+
+            <div {...blockProps}>
+                <div className="hero-content">
+                    <RichText
+                        tagName="h1"
+                        value={heading}
+                        onChange={(value) => setAttributes({ heading: value })}
+                        placeholder="Hero Heading"
+                        className="hero-heading"
+                    />
+                    <RichText
+                        tagName="p"
+                        value={text}
+                        onChange={(value) => setAttributes({ text: value })}
+                        placeholder="Hero text..."
+                        className="hero-text"
+                    />
+                </div>
+            </div>
+        </>
+    );
+}

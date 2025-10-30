@@ -1,0 +1,16 @@
+{
+  "name": "{{BLOCK_SLUG}}",
+  "version": "1.0.0",
+  "description": "Container block with InnerBlocks",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start",
+    "format": "wp-scripts format",
+    "lint:css": "wp-scripts lint-style",
+    "lint:js": "wp-scripts lint-js"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^30.0.0"
+  }
+}

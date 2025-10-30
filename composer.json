@@ -1,7 +1,7 @@
 {
-  "name": "imagewize/sage-native-block",
-  "type": "package",
-  "description": "Interactive native block scaffolding for Sage themes with multiple templates",
+  "name": "imagewize/wp-native-blocks",
+  "type": "wordpress-plugin",
+  "description": "Scaffold native Gutenberg blocks for WordPress block themes with per-block builds",
   "license": "MIT",
   "authors": [
     {
@@ -11,23 +11,22 @@
   ],
   "autoload": {
     "psr-4": {
-      "Imagewize\\SageNativeBlockPackage\\": "src/"
+      "Imagewize\\WpNativeBlocks\\": "src/"
     }
   },
   "require": {
-    "php": "^8.1"
+    "php": "^8.0"
   },
   "require-dev": {
     "laravel/pint": "^1.20"
   },
-  "extra": {
-    "acorn": {
-      "providers": [
-        "Imagewize\\SageNativeBlockPackage\\Providers\\SageNativeBlockServiceProvider"
-      ],
-      "aliases": {
-        "SageNativeBlock": "Imagewize\\SageNativeBlockPackage\\Facades\\SageNativeBlock"
-      }
-    }
-  }
+  "keywords": [
+    "wordpress",
+    "gutenberg",
+    "blocks",
+    "block-theme",
+    "fse",
+    "scaffolding",
+    "wp-cli"
+  ]
 }

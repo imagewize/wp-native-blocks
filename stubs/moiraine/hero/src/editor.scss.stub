@@ -1,0 +1,6 @@
+/**
+ * Editor-only styles
+ */
+.wp-block-{{BLOCK_SLUG}} {
+    // Editor-specific styles here
+}

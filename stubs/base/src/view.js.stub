@@ -1,0 +1,10 @@
+/**
+ * Frontend JavaScript (optional)
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    const blocks = document.querySelectorAll('.wp-block-{{BLOCK_SLUG}}');
+
+    blocks.forEach((block) => {
+        // Add frontend interactivity here
+    });
+});

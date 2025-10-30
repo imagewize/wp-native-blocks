@@ -1,0 +1,10 @@
+/**
+ * Frontend styles
+ */
+.wp-block-{{BLOCK_SLUG}} {
+    padding: 2rem;
+
+    h2 {
+        margin: 0;
+    }
+}
