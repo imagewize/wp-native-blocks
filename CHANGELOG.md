@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.2] - 2025-10-30
+
+### Changed
+
+- **Composer Stability Configuration**
+  - Added `minimum-stability: stable` to composer.json
+  - Added `prefer-stable: true` to composer.json
+  - Improves package installation reliability for users with different stability settings
+
+- **Documentation Improvements**
+  - Updated installation instructions in README.md to include version constraint (`:^3.0`)
+  - Emphasized `--dev` flag usage with explanation that this is a development-only tool
+  - Clarified that version constraint is required for Composer installation
+  - Added note explaining why `--dev` is recommended for this scaffolding tool
+
 ## [3.0.1] - 2025-10-30
 
 ### Changed

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Native Blocks
  * Description: Scaffold native Gutenberg blocks for block themes with per-block builds
- * Version: 3.0.1
+ * Version: 3.0.2
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Imagewize
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WP_NATIVE_BLOCKS_VERSION', '3.0.1');
+define('WP_NATIVE_BLOCKS_VERSION', '3.0.2');
 define('WP_NATIVE_BLOCKS_PATH', plugin_dir_path(__FILE__));
 define('WP_NATIVE_BLOCKS_URL', plugin_dir_url(__FILE__));
 
