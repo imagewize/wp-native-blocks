@@ -14,6 +14,8 @@ Scaffold native Gutenberg blocks for block themes via WP-CLI with per-block buil
 
 WP Native Blocks is a powerful WP-CLI tool that helps WordPress theme developers quickly scaffold native Gutenberg blocks with best practices for block themes (FSE).
 
+**Version History:** This plugin is version 3.0.0+ because it evolved from the `imagewize/sage-native-block` package (versions 1.x-2.x) which was designed for Sage/Acorn themes. Version 3.0.0 represents a complete rewrite focused exclusively on standard WordPress block themes. See the GitHub repository for full changelog.
+
 **Features:**
 
 * Per-block build system with @wordpress/scripts

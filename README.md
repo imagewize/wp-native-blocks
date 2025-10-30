@@ -2,6 +2,8 @@
 
 WordPress plugin for scaffolding native Gutenberg blocks in block themes with per-block builds.
 
+> **Version 3.0.0+** - This package evolved from [imagewize/sage-native-block](https://github.com/imagewize/sage-native-block) which was designed for Sage/Acorn themes. Version 3.0.0 represents a complete rewrite focused on standard WordPress block themes (FSE). See [CHANGELOG.md](CHANGELOG.md) for full migration details.
+
 ## Features
 
 - 🎨 Per-block builds with @wordpress/scripts
