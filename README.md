@@ -22,11 +22,15 @@ WordPress plugin for scaffolding native Gutenberg blocks in block themes with pe
 
 ## Installation
 
-### Via Composer
+### Via Composer (Recommended)
+
+This is a development tool for scaffolding blocks, so install it as a dev dependency:
 
 ```bash
-composer require imagewize/wp-native-blocks --dev
+composer require imagewize/wp-native-blocks:^3.0 --dev
 ```
+
+**Note:** The `--dev` flag is recommended because this plugin is only used during block development, not in production. The version constraint (`:^3.0`) is required.
 
 ### Via WordPress Plugin
 

@@ -28,5 +28,7 @@
     "fse",
     "scaffolding",
     "wp-cli"
-  ]
+  ],
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }
