@@ -7,6 +7,193 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2025-10-30
+
+### Changed - MAJOR BREAKING CHANGES
+
+This is a complete rewrite focused exclusively on **WordPress block themes (FSE)**. The package has been renamed and restructured as a standalone WordPress plugin.
+
+**Package Rename:**
+- Old: `imagewize/sage-native-block` (Sage/Acorn-specific)
+- New: `imagewize/wp-native-blocks` (Block theme plugin)
+- Type changed from `package` to `wordpress-plugin`
+- Repository renamed to `wp-native-blocks`
+
+**Architecture Changes:**
+- ❌ **Removed** all Acorn/Laravel dependencies
+- ❌ **Removed** Sage theme integration
+- ❌ **Removed** service providers, facades, and Acorn-specific code
+- ✅ **Added** standalone WordPress plugin architecture
+- ✅ **Added** direct WP-CLI command registration
+- ✅ **Simplified** to ~300 lines vs thousands in v2.x
+
+**Command Changes:**
+- Old: `wp acorn sage-native-block:create`
+- New: `wp block create`
+- Command now registered directly via WP-CLI (no Acorn required)
+- Much simpler, focused API
+
+**Block Structure Changes:**
+- Location: `blocks/` directory (not `resources/js/blocks/`)
+- Build system: Per-block builds with `@wordpress/scripts`
+- Structure: `blocks/{name}/src/` → `blocks/{name}/build/`
+- Each block has its own `package.json` and independent build
+- Registration: Auto-registers from `build/block.json` path
+
+**File Changes:**
+- ✅ React components use `.jsx` extension (was `.jsx` but now enforced)
+- ✅ Source in `src/` directory, compiled to `build/`
+- ✅ Uses `.scss` for styles (compiled by @wordpress/scripts)
+- ✅ Standard WordPress build tooling only
+
+### Added
+
+- **Plugin Entry Point** - `wp-native-blocks.php`
+  - Standard WordPress plugin header
+  - WP-CLI command registration
+  - No framework dependencies
+
+- **Simplified Command Class** - `src/CLI/CreateCommand.php`
+  - Single, focused command for creating blocks
+  - Auto-updates theme's `functions.php` with registration code
+  - Supports `--template` and `--blocks-dir` options
+
+- **Base Template Stubs** - `stubs/base/src/`
+  - `package.json.stub` - @wordpress/scripts setup
+  - `block.json.stub` - Block metadata
+  - `index.js.stub` - Registration entry point
+  - `edit.jsx.stub` - Editor component (React with .jsx)
+  - `save.jsx.stub` - Save component (React with .jsx)
+  - `style.scss.stub` - Frontend styles
+  - `editor.scss.stub` - Editor-only styles
+  - `view.js.stub` - Optional frontend JavaScript
+  - `.gitignore.stub` - Ignores node_modules/ and build/
+
+- **Generic Templates** - `stubs/generic/`
+  - `innerblocks` - Container block with InnerBlocks support
+
+- **Moiraine Theme Templates** - `stubs/moiraine/`
+  - `hero` - Full-featured hero section with background image
+  - Uses Moiraine theme.json variables
+  - Includes InspectorControls and MediaUpload
+  - RangeControl for height adjustment
+
+- **WordPress.org Ready** - `readme.txt`
+  - Standard WordPress plugin readme format
+  - Ready for WordPress.org submission
+  - Tags: gutenberg, blocks, development, cli, scaffolding, fse
+
+- **Complete Documentation Rewrite**
+  - New README.md focused on block themes
+  - Simple, clear usage examples
+  - Per-block build workflow documentation
+  - Custom template creation guide
+
+### Removed
+
+- ❌ Acorn/Laravel service providers (`src/Providers/`)
+- ❌ Acorn facades (`src/Facades/`)
+- ❌ Acorn console commands (`src/Console/`)
+- ❌ Laravel/Acorn configuration system
+- ❌ Theme detection logic
+- ❌ Multiple build system support
+- ❌ Sage-specific path handling
+- ❌ Complex template category system
+- ❌ Interactive prompts (simplified to CLI args)
+- ❌ Theme.json preset configuration
+- ❌ Vendor publishing system
+
+### Migration from 2.x
+
+**NOT BACKWARDS COMPATIBLE** - This is a complete rewrite for a different use case.
+
+If you're using Sage themes, stay on v2.x:
+```bash
+composer require imagewize/sage-native-block:^2.0 --dev
+```
+
+If you're using block themes, upgrade to v3.x:
+```bash
+composer remove imagewize/sage-native-block
+composer require imagewize/wp-native-blocks --dev
+```
+
+**Key Differences:**
+
+| Feature | v2.x (Sage) | v3.x (Block Themes) |
+|---------|-------------|---------------------|
+| **Framework** | Acorn/Laravel | None (pure WP) |
+| **Command** | `wp acorn sage-native-block:create` | `wp block create` |
+| **Location** | `resources/js/blocks/` | `blocks/` |
+| **Build** | Theme-level | Per-block |
+| **Registration** | `app/setup.php` | `functions.php` |
+| **Structure** | Flat in block folder | `src/` → `build/` |
+| **Target** | Sage themes | Block themes (FSE) |
+
+**New Workflow:**
+
+```bash
+# 1. Create block
+wp block create imagewize/hero --template=moiraine-hero
+
+# 2. Install dependencies
+cd blocks/hero
+npm install
+
+# 3. Start development
+npm run start
+
+# 4. Build for production
+npm run build
+```
+
+### Technical Details
+
+**Namespace Change:**
+- Old: `Imagewize\SageNativeBlockPackage\`
+- New: `Imagewize\WpNativeBlocks\`
+
+**PHP Requirements:**
+- Minimum PHP: 8.0 (was 8.1)
+- WordPress: 6.0+
+
+**File Organization:**
+```
+wp-native-blocks/
+├── wp-native-blocks.php      # Plugin entry point
+├── readme.txt                 # WordPress.org readme
+├── composer.json              # Package definition
+├── src/
+│   └── CLI/
+│       └── CreateCommand.php  # Single command class
+└── stubs/
+    ├── base/                  # Default template
+    ├── generic/               # Generic templates
+    └── moiraine/              # Moiraine theme templates
+```
+
+### Why This Change?
+
+**Problems with v2.x:**
+- Too complex for simple block scaffolding
+- Locked to Sage/Acorn ecosystem
+- Per-theme builds added complexity
+- Not suitable for standard block themes
+
+**Benefits of v3.x:**
+- 90% simpler codebase
+- Works with any block theme
+- Standard WordPress tooling
+- Independent block builds
+- Easier to maintain and extend
+- Clear, predictable structure
+
+### Notes for Contributors
+
+This is essentially a new package with a new purpose. v2.x will remain available for Sage users, while v3.x targets the broader block theme ecosystem.
+
+If you need Sage support, use v2.x. If you're building block themes, use v3.x.
+
 ## [2.0.1] - 2025-10-16
 
 ### Fixed
@@ -217,7 +404,8 @@ Templates automatically appear in the category selection menu on next run.
 - Configuration documentation
 - Feature overview and examples
 
-[Unreleased]: https://github.com/imagewize/sage-native-block/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/imagewize/wp-native-blocks/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/imagewize/wp-native-blocks/releases/tag/v3.0.0
 [2.0.1]: https://github.com/imagewize/sage-native-block/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/imagewize/sage-native-block/compare/v1.0.2...v1.1.0
