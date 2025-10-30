@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2025-10-30
+
+### Changed
+
+- **Documentation Improvements**
+  - Added version history note to README.md explaining evolution from sage-native-block
+  - Added version history note to readme.txt for WordPress.org clarity
+  - Created CLAUDE.md with comprehensive guidance for AI-assisted development
+
+### Removed
+
+- **Removed configure.php** - Legacy package scaffolding script from v2.x template
+  - Was a leftover from Laravel/Spatie package skeleton
+  - Not relevant to WordPress block generator functionality
+  - Could confuse contributors
+
 ## [3.0.0] - 2025-10-30
 
 ### Changed - MAJOR BREAKING CHANGES
@@ -403,13 +419,3 @@ Templates automatically appear in the category selection menu on next run.
 - Comprehensive README with installation and usage instructions
 - Configuration documentation
 - Feature overview and examples
-
-[Unreleased]: https://github.com/imagewize/wp-native-blocks/compare/v3.0.0...HEAD
-[3.0.0]: https://github.com/imagewize/wp-native-blocks/releases/tag/v3.0.0
-[2.0.1]: https://github.com/imagewize/sage-native-block/compare/v2.0.0...v2.0.1
-[2.0.0]: https://github.com/imagewize/sage-native-block/compare/v1.1.0...v2.0.0
-[1.1.0]: https://github.com/imagewize/sage-native-block/compare/v1.0.2...v1.1.0
-[1.0.2]: https://github.com/imagewize/sage-native-block/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/imagewize/sage-native-block/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/imagewize/sage-native-block/compare/v1.0.0-beta.1...v1.0.0
-[1.0.0-beta.1]: https://github.com/imagewize/sage-native-block/releases/tag/v1.0.0-beta.1
