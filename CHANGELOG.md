@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.4] - 2025-11-01
+
+### Enhanced
+
+- **Parent & Child Theme Block Registration**
+  - Updated block registration code to support both parent and child theme blocks
+  - Parent theme blocks are now registered first (available to all child themes)
+  - Child theme blocks are registered second (can override parent blocks)
+  - Registration automatically detects if running in child theme context
+  - Enables proper block inheritance hierarchy in theme development
+
+### Fixed
+
+- **Child Theme Block Access**
+  - Fixed issue where child themes couldn't access parent theme blocks
+  - Menu Designer and other parent theme blocks now work correctly in child themes
+  - Resolves "block not supported" errors when using parent theme blocks in child themes
+
 ## [3.0.3] - 2025-11-01
 
 ### Fixed
