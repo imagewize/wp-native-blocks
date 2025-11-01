@@ -9,23 +9,25 @@
  * Author URI: https://imagewize.com
  * License: MIT
  * Text Domain: wp-native-blocks
+ *
+ * @package WP_Native_Blocks
  */
 
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-// Define plugin constants
-define('WP_NATIVE_BLOCKS_VERSION', '3.0.4');
-define('WP_NATIVE_BLOCKS_PATH', plugin_dir_path(__FILE__));
-define('WP_NATIVE_BLOCKS_URL', plugin_dir_url(__FILE__));
+// Define plugin constants.
+define( 'WP_NATIVE_BLOCKS_VERSION', '3.0.4' );
+define( 'WP_NATIVE_BLOCKS_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WP_NATIVE_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 
-// Load Composer autoloader
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
+// Load Composer autoloader.
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+	require_once __DIR__ . '/vendor/autoload.php';
 }
 
-// Register WP-CLI command
-if (defined('WP_CLI') && WP_CLI) {
-    WP_CLI::add_command('block create', 'Imagewize\\WpNativeBlocks\\CLI\\CreateCommand');
+// Register WP-CLI command.
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	WP_CLI::add_command( 'block create', 'Imagewize\\WpNativeBlocks\\CLI\\CreateCommand' );
 }
