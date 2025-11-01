@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.3] - 2025-11-01
+
+### Fixed
+
+- **Child Theme & Multisite Support**
+  - Fixed `CreateCommand.php` to use `get_stylesheet_directory()` instead of `get_template_directory()`
+  - Blocks now correctly created in child themes (previously only worked in parent themes)
+  - Multisite installations now properly target the active theme of each subsite
+  - Generated registration code in `functions.php` now uses `get_stylesheet_directory()`
+
+### Changed
+
+- **Documentation Improvements**
+  - Added comprehensive multisite support section to README.md
+  - Added Bedrock/Trellis development environment examples
+  - Documented `--url` parameter usage for targeting specific sites in multisite
+  - Added explanation of `get_stylesheet_directory()` vs `get_template_directory()`
+  - Removed incorrect version constraint from Composer installation instructions
+
 ## [3.0.2] - 2025-10-30
 
 ### Changed

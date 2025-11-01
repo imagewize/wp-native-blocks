@@ -1,8 +1,11 @@
+<p align="center">
+  <img src="assets/icon.svg" alt="WP Native Blocks" width="120" height="120">
+</p>
+
 # WP Native Blocks
 
 WordPress plugin for scaffolding native Gutenberg blocks in block themes with per-block builds.
 
-> **Version 3.0.0+** - This package evolved from [imagewize/sage-native-block](https://github.com/imagewize/sage-native-block) which was designed for Sage/Acorn themes. Version 3.0.0 represents a complete rewrite focused on standard WordPress block themes (FSE). See [CHANGELOG.md](CHANGELOG.md) for full migration details.
 
 ## Features
 
@@ -27,7 +30,7 @@ WordPress plugin for scaffolding native Gutenberg blocks in block themes with pe
 This is a development tool for scaffolding blocks, so install it as a dev dependency:
 
 ```bash
-composer require imagewize/wp-native-blocks:^3.0 --dev
+composer require imagewize/wp-native-blocks --dev
 ```
 
 **Note:** The `--dev` flag is recommended because this plugin is only used during block development, not in production. The version constraint (`:^3.0`) is required.
@@ -78,6 +81,55 @@ wp block create imagewize/container --template=innerblocks
 wp block create imagewize/custom --blocks-dir=custom-blocks
 ```
 
+### WordPress Multisite Support
+
+The plugin supports creating blocks for specific sites in a multisite installation. Use the `--url` parameter to target a specific site and its active theme (including child themes):
+
+```bash
+# Create block for main site
+wp block create imagewize/hero --url=https://example.com --path=web/wp
+
+# Create block for subsite (targets the subsite's active theme)
+wp block create imagewize/stats --url=https://example.com/blog/ --path=web/wp
+
+# Create block for child theme on subsite
+wp block create imagewize/custom --url=https://example.com/shop/ --path=web/wp
+```
+
+**Important:** The plugin must be network-activated for multisite usage:
+
+```bash
+wp plugin activate wp-native-blocks --network --path=web/wp
+```
+
+**How it works:**
+- Uses `get_stylesheet_directory()` to support both parent and child themes
+- Respects the `--url` parameter to target specific sites in multisite
+- Automatically creates blocks in the active theme of the specified site
+- Updates the correct theme's `functions.php` file
+
+### Bedrock/Trellis Development Environments
+
+For Bedrock-based projects with Trellis VM:
+
+```bash
+# From host machine (recommended)
+trellis vm shell --workdir /srv/www/example.com/current -- wp block create imagewize/hero --path=web/wp
+
+# From inside VM shell
+trellis vm shell
+cd /srv/www/example.com/current
+wp block create imagewize/hero --path=web/wp
+
+# For multisite in Trellis VM
+trellis vm shell --workdir /srv/www/example.com/current -- wp block create imagewize/stats --url=http://example.test/blog/ --path=web/wp
+```
+
+**Why `--path=web/wp` is needed:**
+- WP-CLI needs to locate WordPress core to load plugins
+- Without `--path`, WP-CLI can't find the plugin or WordPress installation
+- The `web/wp` directory contains WordPress core in Bedrock structure
+
 ## Building Blocks
 
 After creating a block:
@@ -117,7 +169,7 @@ The plugin automatically adds this code to your theme's `functions.php`:
 
 ```php
 add_action('init', function () {
-    $blocks_dir = get_template_directory() . '/blocks';
+    $blocks_dir = get_stylesheet_directory() . '/blocks';
 
     if (!is_dir($blocks_dir)) {
         return;
@@ -138,6 +190,8 @@ add_action('init', function () {
     }
 }, 10);
 ```
+
+**Note:** The code uses `get_stylesheet_directory()` instead of `get_template_directory()` to support child themes. This ensures blocks are loaded from the active theme (child or parent).
 
 ## Creating Custom Templates
 
@@ -210,3 +264,9 @@ MIT
 ## Credits
 
 Built by [Imagewize](https://imagewize.com)
+
+Icon: [IconPark Block One](https://blade-ui-kit.com/blade-icons/iconpark-blockone-o) from [Blade UI Kit](https://blade-ui-kit.com/blade-icons)
+
+## Foot Note
+
+> **Version 3.0.0+** - This package evolved from [imagewize/sage-native-block](https://github.com/imagewize/sage-native-block) which was designed for Sage/Acorn themes. Version 3.0.0 represents a complete rewrite focused on standard WordPress block themes (FSE). See [CHANGELOG.md](CHANGELOG.md) for full migration details.
