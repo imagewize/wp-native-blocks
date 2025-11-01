@@ -1,155 +1,190 @@
 <?php
+/**
+ * WP-CLI command for creating native blocks.
+ *
+ * @package WP_Native_Blocks
+ */
 
 namespace Imagewize\WpNativeBlocks\CLI;
 
 use WP_CLI;
 use WP_CLI_Command;
 
-class CreateCommand extends WP_CLI_Command
-{
-    /**
-     * Create a new native block
-     *
-     * ## OPTIONS
-     *
-     * <name>
-     * : Block name (e.g., vendor/block-name)
-     *
-     * [--template=<template>]
-     * : Template to use (default: base)
-     *
-     * [--blocks-dir=<path>]
-     * : Blocks directory (default: blocks)
-     *
-     * ## EXAMPLES
-     *
-     *     wp block create imagewize/hero
-     *     wp block create imagewize/hero --template=moiraine-hero
-     *     wp block create imagewize/custom --blocks-dir=custom-blocks
-     */
-    public function __invoke($args, $assoc_args)
-    {
-        $blockName = $args[0] ?? null;
-        $template = $assoc_args['template'] ?? 'base';
-        $blocksDir = $assoc_args['blocks-dir'] ?? 'blocks';
+/**
+ * Command class for creating native Gutenberg blocks.
+ */
+class CreateCommand extends WP_CLI_Command {
 
-        // Validate block name
-        if (!$blockName || !str_contains($blockName, '/')) {
-            WP_CLI::error('Block name must include vendor (e.g., vendor/block-name)');
-            return;
-        }
+	/**
+	 * Create a new native block.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <name>
+	 * : Block name (e.g., vendor/block-name)
+	 *
+	 * [--template=<template>]
+	 * : Template to use (default: base)
+	 *
+	 * [--blocks-dir=<path>]
+	 * : Blocks directory (default: blocks)
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp block create imagewize/hero
+	 *     wp block create imagewize/hero --template=moiraine-hero
+	 *     wp block create imagewize/custom --blocks-dir=custom-blocks
+	 *
+	 * @param array $args Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 */
+	public function __invoke( $args, $assoc_args ) {
+		$blockName = $args[0] ?? null;
+		$template  = $assoc_args['template'] ?? 'base';
+		$blocksDir = $assoc_args['blocks-dir'] ?? 'blocks';
 
-        [$vendor, $name] = explode('/', $blockName, 2);
+		// Validate block name
+		if ( ! $blockName || ! str_contains( $blockName, '/' ) ) {
+			WP_CLI::error( 'Block name must include vendor (e.g., vendor/block-name)' );
+			return;
+		}
 
-        // Get theme directory (uses get_stylesheet_directory for child theme support)
-        $themeDir = get_stylesheet_directory();
-        $blockPath = $themeDir . '/' . $blocksDir . '/' . $name;
+		[$vendor, $name] = explode( '/', $blockName, 2 );
 
-        // Check if block already exists
-        if (is_dir($blockPath)) {
-            WP_CLI::error("Block already exists at: {$blockPath}");
-            return;
-        }
+		// Get theme directory (uses get_stylesheet_directory for child theme support)
+		$themeDir  = get_stylesheet_directory();
+		$blockPath = $themeDir . '/' . $blocksDir . '/' . $name;
 
-        // Create block from stub
-        $this->createBlockFromStub($blockPath, $blockName, $template);
+		// Check if block already exists
+		if ( is_dir( $blockPath ) ) {
+			WP_CLI::error( "Block already exists at: {$blockPath}" );
+			return;
+		}
 
-        // Update functions.php if needed
-        $this->ensureBlockRegistration($themeDir, $blocksDir);
+		// Create block from stub
+		$this->createBlockFromStub( $blockPath, $blockName, $template );
 
-        WP_CLI::success("Block created at: {$blockPath}");
-        WP_CLI::line('');
-        WP_CLI::line('Next steps:');
-        WP_CLI::line("  1. cd {$blocksDir}/{$name}");
-        WP_CLI::line('  2. npm install');
-        WP_CLI::line('  3. npm run start');
-    }
+		// Update functions.php if needed
+		$this->ensureBlockRegistration( $themeDir, $blocksDir );
 
-    private function createBlockFromStub(string $blockPath, string $blockName, string $template): void
-    {
-        $stubsDir = WP_NATIVE_BLOCKS_PATH . 'stubs';
+		WP_CLI::success( "Block created at: {$blockPath}" );
+		WP_CLI::line( '' );
+		WP_CLI::line( 'Next steps:' );
+		WP_CLI::line( "  1. cd {$blocksDir}/{$name}" );
+		WP_CLI::line( '  2. npm install' );
+		WP_CLI::line( '  3. npm run start' );
+	}
 
-        // Determine stub path
-        if ($template === 'base') {
-            $stubPath = $stubsDir . '/base';
-        } elseif (str_starts_with($template, 'moiraine-')) {
-            $stubPath = $stubsDir . '/moiraine/' . str_replace('moiraine-', '', $template);
-        } else {
-            $stubPath = $stubsDir . '/generic/' . $template;
-        }
+	/**
+	 * Create a block from a stub template.
+	 *
+	 * @param string $blockPath Path where the block will be created.
+	 * @param string $blockName Full block name (vendor/name).
+	 * @param string $template Template name to use.
+	 */
+	private function createBlockFromStub( string $blockPath, string $blockName, string $template ): void {
+		$stubsDir = WP_NATIVE_BLOCKS_PATH . 'stubs';
 
-        if (!is_dir($stubPath)) {
-            WP_CLI::error("Template not found: {$template}");
-            return;
-        }
+		// Determine stub path
+		if ( 'base' === $template ) {
+			$stubPath = $stubsDir . '/base';
+		} elseif ( str_starts_with( $template, 'moiraine-' ) ) {
+			$stubPath = $stubsDir . '/moiraine/' . str_replace( 'moiraine-', '', $template );
+		} else {
+			$stubPath = $stubsDir . '/generic/' . $template;
+		}
 
-        // Copy stub files
-        $this->recursiveCopy($stubPath, $blockPath, $blockName);
+		if ( ! is_dir( $stubPath ) ) {
+			WP_CLI::error( "Template not found: {$template}" );
+			return;
+		}
 
-        WP_CLI::line('✓ Created block structure');
-    }
+		// Copy stub files
+		$this->recursiveCopy( $stubPath, $blockPath, $blockName );
 
-    private function recursiveCopy(string $src, string $dst, string $blockName): void
-    {
-        $dir = opendir($src);
-        @mkdir($dst, 0755, true);
+		WP_CLI::line( '✓ Created block structure' );
+	}
 
-        while (false !== ($file = readdir($dir))) {
-            if ($file === '.' || $file === '..') {
-                continue;
-            }
+	/**
+	 * Recursively copy files from source to destination.
+	 *
+	 * @param string $src Source directory.
+	 * @param string $dst Destination directory.
+	 * @param string $blockName Block name for placeholder replacement.
+	 */
+	private function recursiveCopy( string $src, string $dst, string $blockName ): void {
+		$dir = opendir( $src );
 
-            $srcPath = $src . '/' . $file;
-            $dstPath = $dst . '/' . str_replace('.stub', '', $file);
+		if ( ! file_exists( $dst ) ) {
+			mkdir( $dst, 0755, true );
+		}
 
-            if (is_dir($srcPath)) {
-                $this->recursiveCopy($srcPath, $dstPath, $blockName);
-            } else {
-                $content = file_get_contents($srcPath);
+		while ( false !== ( $file = readdir( $dir ) ) ) {
+			if ( '.' === $file || '..' === $file ) {
+				continue;
+			}
 
-                // Replace placeholders
-                $content = str_replace('{{BLOCK_NAME}}', $blockName, $content);
-                $content = str_replace('{{BLOCK_SLUG}}', str_replace('/', '-', $blockName), $content);
+			$srcPath = $src . '/' . $file;
+			$dstPath = $dst . '/' . str_replace( '.stub', '', $file );
 
-                file_put_contents($dstPath, $content);
-            }
-        }
+			if ( is_dir( $srcPath ) ) {
+				$this->recursiveCopy( $srcPath, $dstPath, $blockName );
+			} else {
+				$content = file_get_contents( $srcPath );
 
-        closedir($dir);
-    }
+				// Replace placeholders
+				$content = str_replace( '{{BLOCK_NAME}}', $blockName, $content );
+				$content = str_replace( '{{BLOCK_SLUG}}', str_replace( '/', '-', $blockName ), $content );
 
-    private function ensureBlockRegistration(string $themeDir, string $blocksDir): void
-    {
-        $functionsFile = $themeDir . '/functions.php';
+				file_put_contents( $dstPath, $content );
+			}
+		}
 
-        if (!file_exists($functionsFile)) {
-            WP_CLI::warning('functions.php not found. You\'ll need to register blocks manually.');
-            return;
-        }
+		closedir( $dir );
+	}
 
-        $content = file_get_contents($functionsFile);
+	/**
+	 * Ensure block registration code exists in theme's functions.php.
+	 *
+	 * @param string $themeDir Theme directory path.
+	 * @param string $blocksDir Blocks directory name.
+	 */
+	private function ensureBlockRegistration( string $themeDir, string $blocksDir ): void {
+		$functionsFile = $themeDir . '/functions.php';
 
-        // Check if registration already exists
-        if (str_contains($content, 'register_block_type($block_json_path)')) {
-            WP_CLI::line('✓ Block registration already exists in functions.php');
-            return;
-        }
+		if ( ! file_exists( $functionsFile ) ) {
+			WP_CLI::warning( 'functions.php not found. You\'ll need to register blocks manually.' );
+			return;
+		}
 
-        // Add registration code
-        $registrationCode = $this->getRegistrationCode($blocksDir);
+		$content = file_get_contents( $functionsFile );
 
-        // Backup
-        copy($functionsFile, $functionsFile . '.backup-' . date('Y-m-d-His'));
+		// Check if registration already exists
+		if ( str_contains( $content, 'register_block_type($block_json_path)' ) ) {
+			WP_CLI::line( '✓ Block registration already exists in functions.php' );
+			return;
+		}
 
-        // Append registration
-        file_put_contents($functionsFile, $content . "\n" . $registrationCode);
+		// Add registration code
+		$registrationCode = $this->getRegistrationCode( $blocksDir );
 
-        WP_CLI::line('✓ Added block registration to functions.php');
-    }
+		// Backup
+		copy( $functionsFile, $functionsFile . '.backup-' . date( 'Y-m-d-His' ) );
 
-    private function getRegistrationCode(string $blocksDir): string
-    {
-        return <<<PHP
+		// Append registration
+		file_put_contents( $functionsFile, $content . "\n" . $registrationCode );
+
+		WP_CLI::line( '✓ Added block registration to functions.php' );
+	}
+
+	/**
+	 * Get the block registration code to add to functions.php.
+	 *
+	 * @param string $blocksDir Blocks directory name (unused, kept for compatibility).
+	 * @return string Block registration code.
+	 */
+	private function getRegistrationCode( string $blocksDir ): string {
+		return <<<'PHP'
 
 /**
  * Register native blocks
@@ -159,38 +194,42 @@ class CreateCommand extends WP_CLI_Command
  * - Parent theme blocks are registered first (available to all child themes)
  * - Child theme blocks are registered second (can override parent blocks)
  */
-add_action('init', function () {
-    \$directories = [];
+add_action(
+	'init',
+	function () {
+		$directories = array();
 
-    // Add parent theme blocks directory (if exists and different from child)
-    if (get_template_directory() !== get_stylesheet_directory()) {
-        \$directories[] = get_template_directory() . '/{$blocksDir}';
-    }
+		// Add parent theme blocks directory (if exists and different from child).
+		if ( get_template_directory() !== get_stylesheet_directory() ) {
+			$directories[] = get_template_directory() . '/blocks';
+		}
 
-    // Add child/active theme blocks directory
-    \$directories[] = get_stylesheet_directory() . '/{$blocksDir}';
+		// Add child/active theme blocks directory.
+		$directories[] = get_stylesheet_directory() . '/blocks';
 
-    foreach (\$directories as \$blocks_dir) {
-        if (!is_dir(\$blocks_dir)) {
-            continue;
-        }
+		foreach ( $directories as $blocks_dir ) {
+			if ( ! is_dir( $blocks_dir ) ) {
+				continue;
+			}
 
-        \$block_folders = scandir(\$blocks_dir);
+			$block_folders = scandir( $blocks_dir );
 
-        foreach (\$block_folders as \$folder) {
-            if (\$folder === '.' || \$folder === '..') {
-                continue;
-            }
+			foreach ( $block_folders as $folder ) {
+				if ( $folder === '.' || $folder === '..' ) {
+					continue;
+				}
 
-            \$block_json_path = \$blocks_dir . '/' . \$folder . '/build/block.json';
+				$block_json_path = $blocks_dir . '/' . $folder . '/build/block.json';
 
-            if (file_exists(\$block_json_path)) {
-                register_block_type(\$block_json_path);
-            }
-        }
-    }
-}, 10);
+				if ( file_exists( $block_json_path ) ) {
+					register_block_type( $block_json_path );
+				}
+			}
+		}
+	},
+	10
+);
 
 PHP;
-    }
+	}
 }

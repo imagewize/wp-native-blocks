@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.5] - 2025-11-01
+
+### Added
+
+- **WordPress Coding Standards (WPCS) Integration**
+  - Added PHP_CodeSniffer with WordPress Coding Standards support
+  - Added `composer phpcs` command to check coding standards
+  - Added `composer phpcbf` command to auto-fix violations
+  - Created `phpcs.xml.dist` configuration file tailored for WP-CLI plugins
+  - Plugin now ready for WordPress.org submission with full WPCS compliance
+
+### Changed
+
+- **Code Quality Improvements**
+  - Updated all PHP code to comply with WordPress Coding Standards
+  - Fixed indentation: Using tabs instead of spaces (WPCS requirement)
+  - Added comprehensive PHPDoc blocks for all classes and methods
+  - Fixed Yoda conditions for better WordPress compatibility
+  - Added `@package WP_Native_Blocks` tags to all PHP files
+  - Improved code documentation and inline comments
+
+- **Block Registration Code**
+  - Generated registration code now uses proper WordPress coding style
+  - Tabs for indentation instead of spaces
+  - `array()` syntax instead of `[]` for better compatibility
+  - Yoda conditions (`'.' === $folder` instead of `$folder === '.'`)
+  - Proper spacing around operators and parentheses
+  - WPCS-compliant formatting for theme `functions.php` injection
+
+### Developer Experience
+
+- **New Composer Scripts**
+  - `composer phpcs` - Check code against WordPress Coding Standards
+  - `composer phpcbf` - Automatically fix WPCS violations
+  - `composer format` - Format code with Laravel Pint (existing)
+
+- **PHPCS Configuration Highlights**
+  - Allows PSR-4 namespaced classes
+  - Allows camelCase variable names (for WP-CLI compatibility)
+  - Excludes vendor, stubs, and legacy files from checks
+  - Configured for PHP 8.0+ and WordPress 6.0+
+  - Balanced between WordPress standards and modern PHP practices
+
 ## [3.0.4] - 2025-11-01
 
 ### Enhanced

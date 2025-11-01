@@ -4,7 +4,7 @@ Tags: gutenberg, blocks, development, cli, scaffolding, fse, block-theme
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 3.0.2
+Stable tag: 3.0.5
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -100,6 +100,24 @@ npm run build  # Production
 4. Per-block package.json setup
 
 == Changelog ==
+
+= 3.0.5 =
+* Added WordPress Coding Standards (WPCS) integration with PHP_CodeSniffer
+* Added composer phpcs and phpcbf commands for code quality checks
+* Fixed all code to comply with WordPress Coding Standards
+* Block registration code now uses proper WordPress coding style (tabs, Yoda conditions)
+* Added comprehensive PHPDoc blocks for all classes and methods
+* Plugin now ready for WordPress.org submission with full WPCS compliance
+
+= 3.0.4 =
+* Enhanced parent & child theme block registration support
+* Fixed child theme block access issues
+* Blocks from parent themes now available to child themes
+
+= 3.0.3 =
+* Fixed child theme and multisite support
+* Blocks now correctly created in child themes
+* Documentation improvements for multisite environments
 
 = 3.0.2 =
 * Improved Composer stability configuration for better installation reliability
